@@ -4,6 +4,7 @@ import path from "path";
 
 // Import Routes
 import keyEnchange from "./routes/keyEnchange";
+import auth from "./routes/auth";
 
 
 const app = express();
@@ -22,6 +23,7 @@ app.get('/register', (req: Request, res: Response) => {
 // API endpoints
 
 app.use('/api', keyEnchange);
+app.use('/api/auth', auth)
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, TypeScript Express!');

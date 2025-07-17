@@ -107,7 +107,7 @@ function  register() {
 
 
 
-    fetch('https://glueeeed.pl:3000/api/keyexchange', {
+    fetch('http://localhost:3000/api/keyexchange', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ function  register() {
 
 
 
-            fetch("https://glueeeed.dev:3000/api/auth/register", {
+            fetch("http://localhost:3000/api/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

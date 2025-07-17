@@ -17,7 +17,7 @@ interface KeyExchangeResponse {
 }
 
 
-export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, res: Response): e.Response<any, Record<string, any>> => {
+export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, res: Response<KeyExchangeResponse | { error: string }>): void => {
     const { clientPublicKey } = req.body;
 
 
@@ -33,9 +33,9 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
         Secrets.set(sessionID, slicedSecret);
 
 
-        return res.json({ serverPublicKey, sessionID } as KeyExchangeResponse);
+         res.json({ serverPublicKey, sessionID } as KeyExchangeResponse);
     } catch (e) {
-        return res.status(400).json({ error: (e as Error).message });
+         res.status(400).json({ error: (e as Error).message });
     }
 
 };
