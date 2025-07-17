@@ -20,6 +20,10 @@ app.get('/register', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, 'public', '/views' ,'register.html'));
 })
 
+app.get('/login', (req: Request, res: Response)  => {
+    res.sendFile(path.join(__dirname, 'public', '/views' ,'login.html'));
+})
+
 // API endpoints
 
 app.use('/api', keyEnchange);
