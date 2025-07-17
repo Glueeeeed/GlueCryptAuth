@@ -1,0 +1,34 @@
+{
+  "name": "gluecryptauth",
+  "version": "1.0.0",
+  "description": "A TypeScript-based authentication system that leverages mnemonic phrases and cryptographic signatures for secure, privacy-focused user login. Part of the Gluecrypt ecosystem, GlueCryptAuth provides a robust and modern approach to authentication without relying on traditional passwords.",
+  "main": "app.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Glueeeeed/GlueCryptAuth.git"
+  },
+  "keywords": [
+    "TypeScript",
+    "cryptography",
+    "authentication",
+    "mnemonic",
+    "digital-signatures"
+  ],
+  "author": "Glueeed",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Glueeeeed/GlueCryptAuth/issues"
+  },
+  "homepage": "https://github.com/Glueeeeed/GlueCryptAuth#readme",
+  "dependencies": {
+    "@types/elliptic": "^6.4.18",
+    "elliptic": "^6.6.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3"
+  }
+}
