@@ -5,7 +5,7 @@
   "main": "app.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "run": "node app.ts"
+     "start": "node app.ts"
   },
   "repository": {
     "type": "git",
