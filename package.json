@@ -4,7 +4,8 @@
   "description": "A TypeScript-based authentication system that leverages mnemonic phrases and cryptographic signatures for secure, privacy-focused user login. Part of the Gluecrypt ecosystem, GlueCryptAuth provides a robust and modern approach to authentication without relying on traditional passwords.",
   "main": "app.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+     "run": "node app.ts"
   },
   "repository": {
     "type": "git",
