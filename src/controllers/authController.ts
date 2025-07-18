@@ -1,10 +1,15 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import {ec as EC} from 'elliptic';
+const ec = new EC('p256');
 import db from "../config/database";
 import {Request, Response} from "express";
 import {getSlicedSecret} from "./keyExchangeController";
 import {data_decrypt} from "../utils/cryptoService";
 import {ValidateZKP} from "../utils/validation";
+import {jwtWrapper} from "../utils/jwtWrapper";
+import {secret_verify} from "../config/secrets"
+import KeyPair = EC.KeyPair;
 
 interface registerRequest {
     publickey: string;
@@ -17,36 +22,56 @@ interface registerResponse {
     response: string;
 }
 
+interface loginRequest {
+    login: string;
+    challenge: string;
+    deviceID: string;
+    sessionID: string;
+    jwt: string;
+    iv: string;
+
+}
+
+interface loginResponse {
+    response: string;
+}
+
+interface ChallengeRequest {
+    deviceID: string;
+
+}
+
+interface ChallengeResponse {
+    challenge: string;
+}
+
+
 
 
 export const  register   =  (req: Request<{}, {}, registerRequest>, res: Response<registerResponse | { error: string }>): void => {
-    const encrypted_publicKey = req.body.publickey;
-    const encrypted_login = req.body.login;
-    const iv = req.body.iv;
-    const sessionID = req.body.sessionID;
-    const secretkey = getSlicedSecret(sessionID);
+    const encrypted_publicKey : string = req.body.publickey;
+    const encrypted_login : string = req.body.login;
+    const iv : string = req.body.iv;
+    const sessionID : string = req.body.sessionID;
+    const secretkey : string = getSlicedSecret(sessionID);
 
-    const publickey = data_decrypt(encrypted_publicKey, iv, secretkey);
+    const publickey : string = data_decrypt(encrypted_publicKey, iv, secretkey);
     const login = data_decrypt(encrypted_login,iv,secretkey);
-    console.log(publickey);
 
-     async function  registerUSER() : Promise<void> {
+     async function  registerUSER() : Promise<any> {
         const uuid: string = crypto.randomUUID();
         let isValid : string = ValidateZKP(login);
          switch (isValid) {
              case "LoginEmpty":
-                  res.status(400).json({error: "User ID cannot be empty."});
-                  break;
+                   return res.status(400).json({error: "User ID cannot be empty."});
              case "InvalidLogin":
-                  res.status(400).json({error: "Invalid User ID. User ID cannot be an email address."});
-                  break;
+                  return res.status(400).json({error: "Invalid User ID. User ID cannot be an email address."});
              case "ok":
                  break;
              case "LoginNotAllowed":
-                  res.status(400).json({error: "User ID contains forbidden words/characters (!@#$%^&*(),.?\":{}|<>) or has less than 3 characters "});
-                  break;
+                 return res.status(400).json({error: "User ID contains forbidden words/characters (!@#$%^&*(),.?\":{}|<>) or has less than 3 characters "});
              default:
-                  res.status(400).json({error: "Unknown error."});
+                  return res.status(400).json({error: "Unknown error."});
          }
 
          try {
@@ -67,9 +92,80 @@ export const  register   =  (req: Request<{}, {}, registerRequest>, res: Respons
      }
       registerUSER()
 
+}
+
+export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<loginResponse | { error: string }>): void => {
+    const encrypted_login : string = req.body.login;
+    const encrypted_deviceID : string = req.body.deviceID;
+    const sessionID : string = req.body.sessionID;
+    const encrypted_challenge : string  = req.body.challenge;
+    const encrypted_jwt : string  = req.body.jwt;
+    const iv : string  = req.body.iv;
+    const secretkey : string = getSlicedSecret(sessionID);
 
 
 
 
 
+
+    const login : string = data_decrypt(encrypted_login,iv,secretkey);
+    const deviceID :string = data_decrypt(encrypted_deviceID,iv,secretkey);
+    const signature : string = data_decrypt(encrypted_challenge,iv,secretkey);
+    const jwt : string  = data_decrypt(encrypted_jwt,iv,secretkey);
+
+    const payload : any = jwtWrapper(jwt);
+
+    function verifyClientSignature(challenge: string, signatureHex: string, clientPublicKeyHex:string) {
+        try {
+            const key : KeyPair = ec.keyFromPublic(clientPublicKeyHex, 'hex');
+            const signature : string = signatureHex;
+
+            return key.verify(challenge, signature);
+        } catch (err) {
+            console.error('Client signature verification failed', err);
+            return false;
+        }
+    }
+
+    async function auth() : Promise<any> {
+        try {
+            const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
+            const data : any = (users as any[])[0];
+            const publickey : any  = data.publickey;
+
+            const challenge : any = payload.challenge;
+
+            const isValid : boolean = verifyClientSignature(challenge,signature, publickey);
+
+
+            if (isValid === true) {
+                return res.status(200).json({response: "ok!"});
+            } else {
+                return res.status(401).json({error: "Invalid Credentials"});
+            }
+
+
+
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: (err as Error).message });
+        }
+    }
+
+    auth();
+
+
+
+}
+
+export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: Response<ChallengeResponse>): void => {
+    const deviceID = req.body.deviceID;
+    const challenge = crypto.randomBytes(16).toString('hex');
+    const challengeJWT = jwt.sign(
+        {challenge,deviceID},
+        secret_verify,
+        {expiresIn: '1m'}
+    );
+    res.json({challenge: challengeJWT})
 }

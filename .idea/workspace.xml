@@ -5,22 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f5e79b1c-0a12-48c8-b47e-362c9bb8dc63" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/database.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/example.secrets.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/settings.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/ssl.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/controllers/authController.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routes/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/GlueCryptAuth.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/cat-activity.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/public/js/loginZKP.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/jwtWrapper.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/.bin/semver" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.bin/semver" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/controllers/authController.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/authController.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/controllers/keyExchangeController.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/keyExchangeController.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/public/css/register.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/public/css/core.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/public/js/registerZKP.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/public/js/registerZKP.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/public/views/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/validation.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/validation.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,9 +27,9 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="tsconfig.json" />
+        <option value="CSS File" />
         <option value="HTML File" />
         <option value="JavaScript File" />
-        <option value="CSS File" />
         <option value="TypeScript File" />
       </list>
     </option>
@@ -104,10 +100,27 @@
       <updated>1752747755996</updated>
       <workItem from="1752747757108" duration="3213000" />
       <workItem from="1752751059559" duration="5009000" />
+      <workItem from="1752761338371" duration="14363000" />
+      <workItem from="1752778540980" duration="502000" />
+      <workItem from="1752779211298" duration="3942000" />
+      <workItem from="1752818068126" duration="12847000" />
     </task>
+    <task id="LOCAL-00001" summary="Added Login Frontend Endpoint">
+      <option name="closed" value="true" />
+      <created>1752778883480</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1752778883480</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added Login Frontend Endpoint" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Login Frontend Endpoint" />
   </component>
 </project>

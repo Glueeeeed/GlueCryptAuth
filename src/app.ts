@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/register', (req: Request, res: Response) => {
+app.get('/register', (req: Request, res: Response)  => {
     res.sendFile(path.join(__dirname, 'public', '/views' ,'register.html'));
 })
 
@@ -27,10 +27,14 @@ app.get('/login', (req: Request, res: Response)  => {
 // API endpoints
 
 app.use('/api', keyEnchange);
-app.use('/api/auth', auth)
+app.use('/api/auth', auth);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, TypeScript Express!');
+});
+
+app.get('/logged', (req: Request, res: Response) => {
+    res.send('Logged In!');
 });
 
 app.listen(port, () => {

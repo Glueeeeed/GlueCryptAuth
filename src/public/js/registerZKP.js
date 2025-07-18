@@ -37,9 +37,6 @@ function themeChange() {
             localStorage.setItem("theme", "light");
         }
     }
-
-
-
 }
 
 function verifyDeviceID() {
@@ -71,6 +68,7 @@ function generateAuthKeys() {
     const keyPair = ec.keyFromPrivate(privateKey.slice(2));
     const publicKey = keyPair.getPublic('hex');
 
+
     return { publicKey: publicKey, privateKey: privateKey };
 }
 
@@ -97,9 +95,6 @@ function  register() {
     let clientPairKeys = ec.genKeyPair();
     let clientPublicKey = clientPairKeys.getPublic('hex');
     const keys = generateAuthKeys();
-    const registered = document.getElementById('registered');
-    registered.hidden = false;
-    insertKey(keys.privateKey);
 
 
 
@@ -184,9 +179,9 @@ function  register() {
                 .then((data) => {
                     console.log('Data received from server...');
                     console.log('Operation successful');
-                    // const registered = document.getElementById('registered');
-                    // registered.hidden = false;
-                    // insertKey(keys.privateKey);
+                    const registered = document.getElementById('registered');
+                    registered.hidden = false;
+                    insertKey(keys.privateKey);
 
                 })
                 .catch((error) => {

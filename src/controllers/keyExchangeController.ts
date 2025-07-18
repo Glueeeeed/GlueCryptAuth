@@ -1,5 +1,6 @@
 import e, { Request, Response } from 'express';
-import { ec as EC } from 'elliptic';
+import { ec as EC} from 'elliptic';
+import KeyPair = EC.KeyPair;
 const ec = new EC('p256');
 
 
@@ -22,14 +23,14 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
 
 
     try {
-        const serverPairKeys = ec.genKeyPair();
-        const serverPublicKey = serverPairKeys.getPublic('hex');
+        const serverPairKeys : KeyPair = ec.genKeyPair();
+        const serverPublicKey : string = serverPairKeys.getPublic('hex');
 
-        const clientPublicKeyObj = ec.keyFromPublic(clientPublicKey, 'hex');
-        const secret = serverPairKeys.derive(clientPublicKeyObj.getPublic()).toString('hex');
-        const slicedSecret = secret.slice(0, 32);
+        const clientPublicKeyObj : KeyPair = ec.keyFromPublic(clientPublicKey, 'hex');
+        const secret : string = serverPairKeys.derive(clientPublicKeyObj.getPublic()).toString('hex');
+        const slicedSecret : string = secret.slice(0, 32);
 
-        const sessionID = Math.random().toString(36).substring(2, 15);
+        const sessionID : string = Math.random().toString(36).substring(2, 15);
         Secrets.set(sessionID, slicedSecret);
 
 
@@ -41,7 +42,7 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
 };
 
 export const getSlicedSecret = (sessionID: string): string => {
-    const secret = Secrets.get(sessionID);
+    const secret : string | undefined = Secrets.get(sessionID);
     if (!secret) {
         throw new Error('Invalid session ID');
     }

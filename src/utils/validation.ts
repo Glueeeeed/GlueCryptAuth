@@ -10,8 +10,7 @@ export const ValidateZKP = (login : string) : string => {
     if (validator.isEmail(login)) {
         return "InvalidLogin";
     }
-    if (
-        login.length < 3 ||  /[!@#$%^&*(),.?":{}|<>]/.test(login) || forbiddenWords.includes(login)) {
+    if (login.length < 3 ||  /[!@#$%^&*(),.?":{}|<>]/.test(login) || forbiddenWords.includes(login)) {
         return "LoginNotAllowed";
     }
     return "ok";

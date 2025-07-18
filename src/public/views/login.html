@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>GlueCrypt | Register</title>
+    <title>GlueCrypt | Log in</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
@@ -19,13 +19,12 @@
     <script src="../libraries/particlejs/particles.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/node-forge@1.0.0/dist/forge.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.7/elliptic.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js" integrity="sha512-UXYETj+vXKSURF1UlgVRLzWRS9ZiQTv3lcL4rbeLyqTXCPNZC6PTLF/Ik3uxm2Zo+E109cUpJPZfLxJsCgKSng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/idb@8.0.0/build/umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js" integrity="sha512-UXYETj+vXKSURF1UlgVRLzWRS9ZiQTv3lcL4rbeLyqTXCPNZC6PTLF/Ik3uxm2Zo+E109cUpJPZfLxJsCgKSng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
 </head>
-<body class="light">
+<body class="light  ">
 
 <header>
     <nav class="fixed w-full top-0  z-110 opacity-98 text-white navbar  p-5 nav-font">
@@ -35,7 +34,7 @@
         <!--//////////////////////-->
 
         <div class="flex justify-between items-center">
-            <a class=" text-3xl font-['Pacifico'] text-white" href="https://glueeeed.pl">Glue Crypt</a>
+            <a class=" text-3xl font-['Pacifico'] text-white" href="https://glueeeed.dev">Glue Crypt</a>
 
 
             <!--//////////////////////-->
@@ -58,19 +57,14 @@
 </header>
 <main>
 
-    <section class=" w-auto mb-30">
-
-
-
-
-        <div class=" font-['Segoe UI', Tahoma, Geneva, Verdana, sans-serif'] font-medium flex mt-80 flex-col justify-center items-center transition-all duration-400 ease-in-out    ">
+    <section class=" w-auto mb-50 ">
+        <div class=" font-['Segoe UI', Tahoma, Geneva, Verdana, sans-serif']  font-medium flex mt-80 flex-col justify-center items-center transition-all duration-400 ease-in-out    ">
 
             <div class=" relative w-full max-w-md mx-auto box shadow-xl z-100  rounded-xl items-center p-6">
 
                 <h2 class="ml-8 mr-8 text-3xl mt-10 font-bold text-[#5849bb]  font-[Josefin Sans] Sans text-center ">
-                    Register</h2>
-                <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Welcome! </br> register to use the
-                    services.</p>
+                    Log in</h2>
+                <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Welcome Back! </br> Log in to your account to use the services.</p>
 
                 <div class="flex flex-col items-center">
                     <div class="relative w-full mt-5 p-3">
@@ -78,29 +72,30 @@
                                 placeholder="User ID" required type="email">
                         <i class="fa-solid fa-user input-icon absolute pl-6 pb-2  mt-1 top-1/2  -translate-y-1/2 text-gray-400"></i>
                     </div>
-                    <p class="ml-8 mt-3 mr-8 text-xs text-center font-color opacity-70">NOTE: The User ID should not contain personal information and preferably be random</p>
-
                 </div>
-                <div id="registered" hidden>
+
+                <div id="notFoundKey" hidden >
                     <h2 class="ml-8 mr-8 text-xl mt-10 font-bold text-[#5849bb]  font-[Josefin Sans] Sans text-center ">
-                        Successful registered!</h2>
-                    <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Your login key has been saved! </br> In case of changing the device, you need to provide the key generated below.</p>
-                    <div class="flex flex-row justify-between  ml-[5%] mr-[5%] ">
-                        <p  class="ml-8 mt-8 mr-8 text-md text-center font-color opacity-80"> <code id="bipkey">Boat-Car-Honest-Honey-Stone-Water-Speed-Grass-Dog-Cat-Algorithm-Gold</code></p>
-                        <button onclick="copyTextToClipboard('encryptedText', 'copyNotification')"><i class=" fa-solid fa-copy text-violet-500   hover:text-xl transition-all"></i></button>
+                        Authorization key not found!</h2>
+                    <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Authorization key is missing on your device </br> Enter secret words generated at registration to add authorization key </p>
+                    <div class="relative w-full p-3">
+                        <input class=" colors borders valid  w-full  border-[2px]  focus:outline-none focus:ring-2 rounded-lg text-sm h-10 p-3 pl-12"
+                               id="authkey" name="authkey"  placeholder="Enter secret"
+                               required type="password">
+                        <i class="fa-solid fa-lock input-icon absolute pl-6 pb-1  top-1/2 -translate-y-1/2 text-gray-400"></i>
                     </div>
 
-
                 </div>
+
                 <div>
-                    <p class="text-center mt-8 font-color opacity-70 text-sm">Are you already a member? <a
-                            class=" font-bold text-[#5849bb] hover:text-violet-950" href="https://glueeeed.pl/login">
-                        Log in</a></p>
+                    <p class="text-center mt-8 font-color opacity-70 text-sm">Don't have an account? <a
+                            class=" font-bold text-[#5849bb] hover:text-violet-950" href="http://localhost/register">
+                        Sign up</a></p>
                 </div>
                 <div class="flex flex-col items-center mb-5  ">
                     <button class=" w-full mt-5 px-15 py-3 max-md:px4 max-md:py-2.8  text-sm max-md:text-2xs max-sm:text-3xs font-semibold text-violet-100 bg-[#5849bb] rounded-lg shadow-[0_8px_12px_rgba(0,0,0,0.2)]   hover:accent-violet-700 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,0,0,0.3)] active:translate-y-0 active:border-b-2 active:shadow-[0_4px_8px_rgba(0,0,0,0.2)] text-[clamp(0.875rem,2.5vw,1rem)]"
-                            onclick="register()">
-                        Register
+                            onclick="login()">
+                        Log in
                     </button>
                 </div>
 
@@ -109,15 +104,16 @@
 
 
     </section>
-    <div class=" mt-10 absolute top-0 left-0 w-full h-[100vh]  overflow-hidden ">
+    <div class=" mt-20 absolute top-0 left-0 w-full h-[100vh]  overflow-hidden ">
         <div class=" h-[100vh] z-1" id="particles-js">
             <canvas class="particles-js-canvas-el z-[-1]"></canvas>
         </div>
     </div>
+
 </main>
 
 
-<footer class=" relative footer text-white py-8 mt-80 z-20 ">
+<footer class=" relative footer text-white py-8 mt-100 z-20 ">
     <div class="container mx-auto px-4 z-10">
         <div class="flex flex-col md:flex-row justify-between items-center">
             <div class="mb-6 mt-6 md:mb-0">
@@ -128,7 +124,7 @@
                 <div>
                     <h3 class="font-semibold mb-3">Links</h3>
                     <ul class="space-y-2 opacity-80">
-                        <li><a class="hover:text-primary transition-colors" href="https://glueeeed.pl">Main</a>
+                        <li><a class="hover:text-primary transition-colors" href="#">Main</a>
                         </li>
                         <li><a class="hover:text-primary transition-colors" href="#">About Project</a></li>
                         <li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>
@@ -138,7 +134,7 @@
         </div>
         <div class="border-t border-white/20 mt-6 p-6 text-center">
             <p class="opacity-80">© 2025 Glueeed. All rights reserved.</p>
-            <p class="text-sm opacity-60">Version 1.0.0 | Last updated: 5.06.2025</p>
+            <p class="text-sm opacity-60">Version 1.0.0 | Last updated: 17.07.2025</p>
         </div>
     </div>
 
@@ -150,8 +146,7 @@
     });
 </script>
 
-
-<script src="../js/registerZKP.js"></script>
+<script src="../js/loginZKP.js"></script>
 
 
 </body>
