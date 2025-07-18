@@ -42,7 +42,7 @@ A TypeScript-based authentication system that leverages mnemonic phrases and cry
 6. Start the application:
 
    ``` bash
-   npm start
+   npm run
    ```
 7. Open your browser and go to `http://localhost/register` or `https://yourdomain/register`
 
