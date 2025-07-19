@@ -20,6 +20,13 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
 });
 
+function copyTextToClipboard() {
+
+    let output = document.getElementById('bipkey').textContent;
+    navigator.clipboard.writeText(output);
+
+}
+
 function themeChange() {
     const mode = document.getElementById("darkModeSwitch");
     const modeMobile = document.getElementById("darkModeSwitchMobile");
