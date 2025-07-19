@@ -2,6 +2,7 @@ let ec = new elliptic.ec('p256');
 
 document.addEventListener("DOMContentLoaded", (event) => {
     verifyDeviceID()
+    resetRegistered()
     const savedDarkMode = localStorage.getItem('theme') === 'dark';
 
 
@@ -24,7 +25,14 @@ function copyTextToClipboard() {
 
     let output = document.getElementById('bipkey').textContent;
     navigator.clipboard.writeText(output);
+    alert('copied');
 
+}
+
+function resetRegistered() {
+    if (localStorage.getItem('is_Registered') !== null) {
+        localStorage.removeItem('is_Registered')
+    }
 }
 
 function themeChange() {
@@ -55,8 +63,11 @@ function verifyDeviceID() {
 }
 
 
-function generateAuthKeys() {
+function generateAuthKeys(userRegistered) {
     const bipkey = document.getElementById('bipkey');
+    if (localStorage.getItem('is_Registered') !== null){
+        throw new Error('User already registered')
+    }
 
     const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(24));
     const mnemonicFormatted = mnemonic.phrase.split(' ').join('-');
@@ -98,18 +109,10 @@ async function insertKey(key) {
 
 function  register() {
     let login = document.getElementById('login').value;
-
     let clientPairKeys = ec.genKeyPair();
     let clientPublicKey = clientPairKeys.getPublic('hex');
     const keys = generateAuthKeys();
-
-
-
-
-
-
-
-    fetch('http://localhost:3000/api/keyexchange', {
+    fetch('https://glueeed.dev:6969/api/keyexchange', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -163,7 +166,7 @@ function  register() {
 
 
 
-            fetch("http://localhost:3000/api/auth/register", {
+            fetch("https://glueeed.dev:6969/api/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -187,6 +190,7 @@ function  register() {
                     console.log('Data received from server...');
                     console.log('Operation successful');
                     const registered = document.getElementById('registered');
+                    localStorage.setItem('is_Registered', 'true');
                     alert(data.response);
                     registered.hidden = false;
                     insertKey(keys.privateKey);

@@ -58,39 +58,43 @@ export const  register   =  (req: Request<{}, {}, registerRequest>, res: Respons
     const publickey : string = data_decrypt(encrypted_publicKey, iv, secretkey);
     const login = data_decrypt(encrypted_login,iv,secretkey);
 
-     async function  registerUSER() : Promise<any> {
+    registerUSER()
+
+    async function  registerUSER() : Promise<any> {
         const uuid: string = crypto.randomUUID();
         let isValid : string = ValidateZKP(login);
-         switch (isValid) {
-             case "LoginEmpty":
-                   return res.status(400).json({error: "User ID cannot be empty."});
-             case "InvalidLogin":
-                  return res.status(400).json({error: "Invalid User ID. User ID cannot be an email address."});
-             case "ok":
-                 break;
-             case "LoginNotAllowed":
-                 return res.status(400).json({error: "User ID contains forbidden words/characters (!@#$%^&*(),.?\":{}|<>) or has less than 3 characters "});
-             default:
-                  return res.status(400).json({error: "Unknown error."});
-         }
+        switch (isValid) {
+            case "LoginEmpty":
+                return res.status(400).json({error: "User ID cannot be empty."});
+            case "InvalidLogin":
+                return res.status(400).json({error: "Invalid User ID. User ID cannot be an email address."});
+            case "ok":
+                break;
+            case "LoginNotAllowed":
+                return res.status(400).json({error: "User ID contains forbidden words/characters (!@#$%^&*(),.?\":{}|<>) or has less than 3 characters (Max 20) "});
+            default:
+                return res.status(400).json({error: "Unknown error."});
+        }
 
-         try {
-             const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
-             if ((users as any[]).length > 0) {
-                  res.status(400).json({ error: 'User ID not available.' });
-             }
+        try {
+            const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
+            if ((users as any[]).length > 0) {
+                return res.status(400).json({ error: 'User ID not available.' });
+            }
 
-             await db.execute('INSERT INTO usersZKP (login, publickey, admin, uuid) VALUES (?, ?, False, ?)', [login, publickey, uuid]);
-             res.json({response: "Successfully registered! Save your secret key, it will not be shown again!"});
-             console.log(`Successfully registered. User: ${uuid}`)
-         } catch (err) {
-             console.error(err);
-             res.status(500).json({ error: (err as Error).message });
-         }
+            await db.execute('INSERT INTO usersZKP (login, publickey, admin, uuid) VALUES (?, ?, False, ?)', [login, publickey, uuid]);
+            res.json({response: "Successfully registered! Save your secret key, it will not be shown again!"});
+            console.log(`Successfully registered. User: ${uuid}`)
+            return;
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Server Internal Error' });
+
+        }
 
 
-     }
-      registerUSER()
+    }
+
 
 }
 
@@ -132,6 +136,9 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
             const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
             const data : any = (users as any[])[0];
+            if ((users as any[]).length === 0) {
+                return res.status(400).json({ error: 'User ID not found.' });
+            }
             const publickey : any  = data.publickey;
             const uuid : any  = data.uuid;
 
@@ -148,7 +155,7 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
                     {expiresIn: '1h'}
                 );
 
-                res.json({token: token})
+                return res.json({token: token})
             } else {
                 return res.status(401).json({error: "Invalid Credentials"});
             }
@@ -158,7 +165,7 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: (err as Error).message });
+            res.status(500).json({ error: 'Server Internal Error' });
         }
     }
 
@@ -168,7 +175,7 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
 }
 
-export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: Response<ChallengeResponse>): void => {
+export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: Response<ChallengeResponse>): any => {
     const deviceID : string = req.body.deviceID;
     const challenge : string = crypto.randomBytes(16).toString('hex');
     const challengeJWT : string = jwtLib.sign(
@@ -176,5 +183,5 @@ export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: R
         secret_verify,
         {expiresIn: '1m'}
     );
-    res.json({challenge: challengeJWT})
+    return res.json({challenge: challengeJWT})
 }
