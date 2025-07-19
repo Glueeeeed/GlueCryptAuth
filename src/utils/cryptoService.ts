@@ -1,6 +1,6 @@
 import * as forge from 'node-forge';
 
-// Define types for parameters
+
 export function data_decrypt(data: string, iv: string, secretkey: string): string {
 
     const encryptedBytes = forge.util.decode64(data);

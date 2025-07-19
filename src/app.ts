@@ -23,6 +23,13 @@
 import express, { Request, Response } from 'express';
 import path from "path";
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import https from 'https';
+import helmet from 'helmet';
+
+//Uncomment when httpsMode is enabled
+import {options} from "./config/ssl";
+import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings";
 
 // Import Routes
 import keyEnchange from "./routes/keyEnchange";
@@ -30,12 +37,32 @@ import auth from "./routes/auth";
 import {secured} from "./ middlewares/auth";
 
 
-
 const app = express();
-const port = 3000;
+const port : number = PORT
 
-app.use(cookieParser());
+
+//Uncomment when httpsMode is enabled
+
+// const ssl = options
+
+
+//Middlewares
 app.use(express.json());
+app.use(cookieParser());
+
+if (corsEnabled === true) {
+    const corsOptions = {
+        origin: domain,
+        credentials: true,
+        optionsSuccessStatus: 200,
+    };
+    app.use(cors());
+}
+
+if (helmetEnabled === true) {
+    app.use(helmet(helmetConfig));
+}
+
 
 // Frontend handling
 
@@ -60,6 +87,20 @@ app.get('/', secured, (req: Request, res: Response) => {
 
 
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+
+
+if (httpsMode === true) {
+
+    //Uncomment when httpsMode is enabled
+
+    // https.createServer(ssl, app).listen(port, "0.0.0.0", () => {
+    //     console.log(`App running at glueeed.dev:${port}`);
+    // });
+
+} else {
+    app.listen(port, () => {
+        console.log(`App running at http://localhost:${port}`);
+    });
+}
+
+
