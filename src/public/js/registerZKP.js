@@ -187,6 +187,7 @@ function  register() {
                     console.log('Data received from server...');
                     console.log('Operation successful');
                     const registered = document.getElementById('registered');
+                    alert(data.response);
                     registered.hidden = false;
                     insertKey(keys.privateKey);
 

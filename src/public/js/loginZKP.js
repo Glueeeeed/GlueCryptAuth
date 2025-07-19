@@ -332,13 +332,13 @@ async function  authenticate(Signed_challenge, jwt ,deviceID, loginUser) {
                 .then((data) => {
                     console.log('Data received from server...');
                     console.log('Operation successful');
-                    setCookie("access_token", data.response, {
+                    setCookie("access_token", data.token, {
                         'max-age': 3600,
                         'secure': true,
                         'samesite': 'strict',
                         'path': '/'
                     });
-                    window.location.href = "http://localhost:3000/logged";
+                    window.location.href = "http://localhost:3000/";
 
                 })
                 .catch((error) => {

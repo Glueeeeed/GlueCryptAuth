@@ -36,7 +36,8 @@ A TypeScript-based authentication system that leverages mnemonic phrases and cry
          login TEXT NOT NULL,
          publickey TEXT NOT NULL,
          admin BOOLEAN,
-         uuid TEXT NOT NULL );
+         uuid TEXT NOT NULL 
+     );
    
 5. Create `secrets.ts` (Check `example.secrets.ts`)
 6. Start the application:
@@ -44,7 +45,7 @@ A TypeScript-based authentication system that leverages mnemonic phrases and cry
    ``` bash
    npm run start
    ```
-7. Open your browser and go to `http://localhost/register` or `https://yourdomain/register`
+7. Open your browser and go to `http://localhost:3000/register` or `https://yourdomain:3000/register`
 
 ## Usage
 1. **Registration**:

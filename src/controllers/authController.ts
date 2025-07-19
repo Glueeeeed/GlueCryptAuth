@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import * as jwtLib from 'jsonwebtoken';
 import crypto from 'crypto';
 import {ec as EC} from 'elliptic';
 const ec = new EC('p256');
@@ -8,7 +8,7 @@ import {getSlicedSecret} from "./keyExchangeController";
 import {data_decrypt} from "../utils/cryptoService";
 import {ValidateZKP} from "../utils/validation";
 import {jwtWrapper} from "../utils/jwtWrapper";
-import {secret_verify} from "../config/secrets"
+import {secret_verify, secretjwt} from "../config/secrets"
 import KeyPair = EC.KeyPair;
 
 interface registerRequest {
@@ -33,7 +33,7 @@ interface loginRequest {
 }
 
 interface loginResponse {
-    response: string;
+    token: string;
 }
 
 interface ChallengeRequest {
@@ -129,9 +129,11 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
     async function auth() : Promise<any> {
         try {
+
             const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
             const data : any = (users as any[])[0];
             const publickey : any  = data.publickey;
+            const uuid : any  = data.uuid;
 
             const challenge : any = payload.challenge;
 
@@ -139,7 +141,14 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
 
             if (isValid === true) {
-                return res.status(200).json({response: "ok!"});
+
+                const token= jwtLib.sign(
+                    {uuid},
+                    secretjwt,
+                    {expiresIn: '1h'}
+                );
+
+                res.json({token: token})
             } else {
                 return res.status(401).json({error: "Invalid Credentials"});
             }
@@ -160,9 +169,9 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 }
 
 export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: Response<ChallengeResponse>): void => {
-    const deviceID = req.body.deviceID;
-    const challenge = crypto.randomBytes(16).toString('hex');
-    const challengeJWT = jwt.sign(
+    const deviceID : string = req.body.deviceID;
+    const challenge : string = crypto.randomBytes(16).toString('hex');
+    const challengeJWT : string = jwtLib.sign(
         {challenge,deviceID},
         secret_verify,
         {expiresIn: '1m'}

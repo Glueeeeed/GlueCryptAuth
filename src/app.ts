@@ -22,15 +22,19 @@
 
 import express, { Request, Response } from 'express';
 import path from "path";
+import cookieParser from 'cookie-parser';
 
 // Import Routes
 import keyEnchange from "./routes/keyEnchange";
 import auth from "./routes/auth";
+import {secured} from "./ middlewares/auth";
+
 
 
 const app = express();
 const port = 3000;
 
+app.use(cookieParser());
 app.use(express.json());
 
 // Frontend handling
@@ -50,13 +54,11 @@ app.get('/login', (req: Request, res: Response)  => {
 app.use('/api', keyEnchange);
 app.use('/api/auth', auth);
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, TypeScript Express!');
+app.get('/', secured, (req: Request, res: Response) => {
+    res.send('Sybau!');
 });
 
-app.get('/logged', (req: Request, res: Response) => {
-    res.send('Logged In!');
-});
+
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
