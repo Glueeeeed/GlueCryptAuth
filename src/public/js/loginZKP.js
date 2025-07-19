@@ -19,6 +19,23 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
 });
 
+async function resetKey() {
+    try {
+        const db = await idb.openDB('gluecrypt', 2, {
+            upgrade(db, oldVersion, newVersion, transaction) {
+                if (!db.objectStoreNames.contains('keys')) {
+                    db.createObjectStore('keys');
+                }
+            }
+        });
+        await db.delete('keys', 'privateKey');
+        alert('Key reset successfully!');
+    } catch (error) {
+        console.error('Failed to save:', error);
+        return null;
+    }
+}
+
 function base64UrlDecode(str) {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = atob(str);
@@ -27,6 +44,21 @@ function base64UrlDecode(str) {
     } catch {
         return decoded;
     }
+}
+
+function validateMnemonic(mnemonic) {
+    if (!mnemonic.includes("-")) {
+        return false;
+    }
+
+    const array = mnemonic.split('-');
+
+    if (array.length !== 18) {
+        return false;
+    }
+
+    return true;
+
 }
 
 function decodeJwtPayload(token) {
@@ -106,17 +138,23 @@ async function checkAuthKey() {
         } else {
             const notfound = document.getElementById('notFoundKey');
             notfound.hidden = false;
+            throw new Error('Not found.');
 
         }
     } catch (error) {
         console.error('Failed to process key:', error);
-        return null;
+        throw error;
     }
 }
 
 function generateAuthKey() {
     try {
         const authKeyInput = document.getElementById('authkey').value;
+        const isValid = validateMnemonic(authKeyInput);
+        if (!isValid) {
+            alert('Invalid auth key!');
+            throw new Error('Invalid auth key');
+        }
         const mnemonicKey = authKeyInput.split('-').join(' ');
         const mnemonicObj = ethers.Mnemonic.fromPhrase(mnemonicKey);
         const seed = mnemonicObj.computeSeed();
@@ -128,13 +166,13 @@ function generateAuthKey() {
 
     } catch (error) {
         console.error('Failed to generate auth key:', error);
-        return null;
+        throw error;
     }
 }
 
 
 
- async function  login() {
+async function  login() {
     let login = document.getElementById('login').value;
     const notfound = document.getElementById('notFoundKey').hidden;
     if (notfound === true) {
