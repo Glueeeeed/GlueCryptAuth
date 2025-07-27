@@ -4,12 +4,13 @@ import {ec as EC} from 'elliptic';
 const ec = new EC('p256');
 import db from "../config/database";
 import {Request, Response} from "express";
-import {getSlicedSecret} from "./keyExchangeController";
+import {deleteSecret, getSlicedSecret} from "./keyExchangeController";
 import {data_decrypt} from "../utils/cryptoService";
 import {ValidateZKP} from "../utils/validation";
 import {jwtWrapper} from "../utils/jwtWrapper";
 import {secret_verify, secretjwt} from "../config/secrets"
 import KeyPair = EC.KeyPair;
+import {colors} from "../utils/chalk";
 
 interface registerRequest {
     publickey: string;
@@ -48,6 +49,7 @@ interface ChallengeResponse {
 
 
 
+
 export const  register   =  (req: Request<{}, {}, registerRequest>, res: Response<registerResponse | { error: string }>): void => {
     const encrypted_publicKey : string = req.body.publickey;
     const encrypted_login : string = req.body.login;
@@ -65,29 +67,58 @@ export const  register   =  (req: Request<{}, {}, registerRequest>, res: Respons
         let isValid : string = ValidateZKP(login);
         switch (isValid) {
             case "LoginEmpty":
+                console.group(colors.category('AuthController'));
+                console.log(colors.warning(`Validation Failed. `))
+                console.groupEnd()
+                deleteSecret(sessionID);
                 return res.status(400).json({error: "User ID cannot be empty."});
             case "InvalidLogin":
+                console.group(colors.category('AuthController'));
+                console.log(colors.warning(`Validation Failed.`))
+                console.groupEnd()
+                deleteSecret(sessionID);
                 return res.status(400).json({error: "Invalid User ID. User ID cannot be an email address."});
             case "ok":
                 break;
             case "LoginNotAllowed":
+                console.group(colors.category('AuthController'));
+                console.log(colors.warning(`Validation Failed.`))
+                console.groupEnd()
+                deleteSecret(sessionID);
                 return res.status(400).json({error: "User ID contains forbidden words/characters (!@#$%^&*(),.?\":{}|<>) or has less than 3 characters (Max 20) "});
+            case "Error":
+                console.group(colors.category('AuthController'));
+                console.log(colors.warning(`Validation Failed.`))
+                console.groupEnd()
+                deleteSecret(sessionID);
+                return res.status(400).json({error: "Server Error."});
             default:
+                console.group(colors.category('AuthController'));
+                console.log(colors.warning(`Validation Failed.`))
+                console.groupEnd()
+                deleteSecret(sessionID);
                 return res.status(400).json({error: "Unknown error."});
         }
 
         try {
             const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
             if ((users as any[]).length > 0) {
+                deleteSecret(sessionID);
                 return res.status(400).json({ error: 'User ID not available.' });
             }
 
             await db.execute('INSERT INTO usersZKP (login, publickey, admin, uuid) VALUES (?, ?, False, ?)', [login, publickey, uuid]);
             res.json({response: "Successfully registered! Save your secret key, it will not be shown again!"});
-            console.log(`Successfully registered. User: ${uuid}`)
+            console.group(colors.category('AuthController'));
+            console.log(colors.success(`Successfully registered. User: ${uuid}`))
+            deleteSecret(sessionID);
+            console.groupEnd()
             return;
         } catch (err) {
-            console.error(err);
+            console.group(colors.category('AuthController'));
+            console.error(colors.error(err));
+            console.groupEnd()
+            deleteSecret(sessionID);
             return res.status(500).json({ error: 'Server Internal Error' });
 
         }
@@ -126,7 +157,9 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
             return key.verify(challenge, signature);
         } catch (err) {
-            console.error('Client signature verification failed', err);
+            console.group(colors.category('AuthController'));
+            console.error(colors.error('Client signature verification failed', err));
+            console.groupEnd()
             return false;
         }
     }
@@ -137,6 +170,7 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
             const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
             const data : any = (users as any[])[0];
             if ((users as any[]).length === 0) {
+                deleteSecret(sessionID);
                 return res.status(400).json({ error: 'User ID not found.' });
             }
             const publickey : any  = data.publickey;
@@ -154,9 +188,10 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
                     secretjwt,
                     {expiresIn: '1h'}
                 );
-
+                deleteSecret(sessionID);
                 return res.json({token: token})
             } else {
+                deleteSecret(sessionID);
                 return res.status(401).json({error: "Invalid Credentials"});
             }
 
@@ -164,8 +199,13 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
 
         } catch (err) {
-            console.error(err);
+            console.group(colors.category('AuthController'));
+            console.error(colors.error(err));
+            console.groupEnd();
+            deleteSecret(sessionID);
             res.status(500).json({ error: 'Server Internal Error' });
+
+
         }
     }
 
@@ -185,3 +225,5 @@ export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: R
     );
     return res.json({challenge: challengeJWT})
 }
+
+

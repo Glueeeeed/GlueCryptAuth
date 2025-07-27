@@ -26,10 +26,12 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import https from 'https';
 import helmet from 'helmet';
+import {colors} from "./utils/chalk";
 
 //Uncomment when httpsMode is enabled
 import {options} from "./config/ssl";
-import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings";
+// import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings"; //Uncomment when helmet is enabled
+import {corsEnabled, httpsMode, PORT, domain, helmetEnabled} from "./config/settings"; //Comment when helmet is enabled
 
 // Import Routes
 import keyEnchange from "./routes/keyEnchange";
@@ -43,7 +45,7 @@ const port : number = PORT
 
 //Uncomment when httpsMode is enabled
 
-// const ssl = options
+const ssl = options
 
 
 //Middlewares
@@ -59,9 +61,9 @@ if (corsEnabled === true) {
     app.use(cors());
 }
 
-if (helmetEnabled === true) {
-    app.use(helmet(helmetConfig));
-}
+// if (helmetEnabled === true) {
+//     // app.use(helmet(helmetConfig)); //Uncomment when helmet is enabled
+// }
 
 
 // Frontend handling
@@ -90,17 +92,24 @@ app.get('/', secured, (req: Request, res: Response) => {
 
 
 if (httpsMode === true) {
+    console.group(colors.category('Core App'))
+    https.createServer(ssl, app).listen(port, "0.0.0.0", () => {
 
-    //Uncomment when httpsMode is enabled
+        console.log(colors.info(`App running at glueeed.dev:${port}`));
 
-    // https.createServer(ssl, app).listen(port, "0.0.0.0", () => {
-    //     console.log(`App running at glueeed.dev:${port}`);
-    // });
+    });
+    console.groupEnd()
 
 } else {
+    console.group(colors.category('Core App'))
     app.listen(port, () => {
-        console.log(`App running at http://localhost:${port}`);
+        console.log(colors.info(`App running at http://localhost:${port}`));
+
     });
+    console.groupEnd()
+
 }
+
+
 
 
