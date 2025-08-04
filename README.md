@@ -43,7 +43,7 @@ https://glueeed.dev:6969/
        uuid TEXT NOT NULL 
    );
 
-5. Create `secrets.ts` (Check `secrets.ts`)
+5. Create `secrets.ts` (Check `example.secrets.ts`)
 6. Start the application:
 
    ``` bash
