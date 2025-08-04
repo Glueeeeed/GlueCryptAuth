@@ -1,6 +1,17 @@
 
+/**
+ * GlueCryptAuth - Zero Knowledge Proof Authentication System
+ * 
+ * This module handles the secure login process using elliptic curve cryptography,
+ * zero-knowledge proofs, and multi-factor authentication with device fingerprinting.
+ */
+
+// Initialize elliptic curve with P-256 standard
 let ec = new elliptic.ec('p256');
+// Flag to track if a new key is being generated during the session
 let isGeneratedKey = false;
+
+// Setup initial state when DOM is fully loaded
 document.addEventListener("DOMContentLoaded", (event) => {
     verifyDeviceID()
     const savedDarkMode = localStorage.getItem('theme') === 'dark';
@@ -21,6 +32,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
 });
 
+/**
+ * Resets the user's authentication key from IndexedDB storage
+ * 
+ * @returns {Promise<null>} Returns null on error
+ */
 async function resetKey() {
     try {
         const db = await idb.openDB('gluecrypt', 2, {
@@ -38,6 +54,12 @@ async function resetKey() {
     }
 }
 
+/**
+ * Decodes a base64url encoded string to UTF-8
+ * 
+ * @param {string} str - The base64url encoded string
+ * @returns {string} The decoded string
+ */
 function base64UrlDecode(str) {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = atob(str);
@@ -48,6 +70,12 @@ function base64UrlDecode(str) {
     }
 }
 
+/**
+ * Validates the format of a mnemonic phrase
+ * 
+ * @param {string} mnemonic - The mnemonic phrase to validate
+ * @returns {boolean} True if the mnemonic is valid, false otherwise
+ */
 function validateMnemonic(mnemonic) {
     if (!mnemonic.includes("-")) {
         return false;
@@ -60,15 +88,25 @@ function validateMnemonic(mnemonic) {
     }
 
     return true;
-
 }
 
+/**
+ * Extracts and decodes the payload from a JWT token
+ * 
+ * @param {string} token - The JWT token
+ * @returns {Object} The decoded payload as a JavaScript object
+ * @throws {Error} If the token is invalid
+ */
 function decodeJwtPayload(token) {
     const payloadBase64Url = token.split('.')[1];
     if (!payloadBase64Url) throw new Error('Invalid token');
     return JSON.parse(base64UrlDecode(payloadBase64Url));
 }
 
+/**
+ * Toggles between light and dark theme based on user preference
+ * Saves the preference to localStorage for persistence
+ */
 function themeChange() {
     const mode = document.getElementById("darkModeSwitch");
     const modeMobile = document.getElementById("darkModeSwitchMobile");
@@ -88,12 +126,29 @@ function themeChange() {
     }
 }
 
+/**
+ * Retrieves the browser fingerprint using ThumbmarkJS
+ * 
+ * @returns {Promise<Object>} The fingerprint object
+ */
 async function getFingerprint() {
     const tm = new ThumbmarkJS.Thumbmark();
     const fingerprint = await tm.get();
     return fingerprint;
 }
 
+/**
+ * Secures a private key using a combination of device fingerprint, device ID, and server-provided base key
+ * 
+ * This function implements a multi-factor encryption approach where the key can only be
+ * decrypted when all three components (fingerprint, deviceID, baseKey) are present.
+ * 
+ * @param {string} fingerprint - The browser fingerprint
+ * @param {string} privateKey - The private key to secure
+ * @param {string} deviceID - The unique device identifier
+ * @param {string} baseKey - The server-provided component of the encryption key
+ * @returns {Object} Object containing the encrypted key, initialization vector, and salt
+ */
 function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
     const md = forge.md.sha384.create();
     md.update(deviceID + fingerprint + baseKey);
@@ -108,6 +163,15 @@ function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
     return { encryptedKey: encryptedPrivatekey, iv: ivHex, salt: saltHex } ;
 }
 
+/**
+ * Decrypts a secured private key using the three-factor authentication components
+ * 
+ * @param {string} encryptedKey - The encrypted key in format "encrypted|iv:salt"
+ * @param {string} deviceID - The unique device identifier
+ * @param {string} baseKey - The server-provided component of the encryption key
+ * @param {string} fingerprint - The browser fingerprint
+ * @returns {string} The decrypted private key
+ */
 async function decryptSecuredKey(encryptedKey, deviceID, baseKey, fingerprint) {
     const md = forge.md.sha384.create();
     md.update(deviceID + fingerprint + baseKey);
@@ -119,18 +183,29 @@ async function decryptSecuredKey(encryptedKey, deviceID, baseKey, fingerprint) {
     const key = forge.pkcs5.pbkdf2(hashedData, extractedSaltBytes, 100000, 32, forge.sha256.create());
     const keySliced = key.slice(0, 32);
     const decrypted = aes_decrypt(encrypted, extractedIvBytes, keySliced);
+    console.log('decrypted', decrypted);
     return decrypted;
-
 }
 
+/**
+ * Ensures a device ID exists in localStorage, creating one if needed
+ * 
+ * The device ID is one of the three factors used in the authentication process.
+ */
 function verifyDeviceID() {
     if (localStorage.getItem('DeviceID') === null) {
         const DeviceID = crypto.randomUUID();
         localStorage.setItem('DeviceID', DeviceID);
-
     }
 }
 
+/**
+ * Sets a browser cookie with the specified options
+ * 
+ * @param {string} name - The name of the cookie
+ * @param {string} value - The value to store in the cookie
+ * @param {Object} options - Cookie options (path, expires, sameSite, secure)
+ */
 function setCookie(name, value, options = {}) {
     let cookieString = `${name}=${value}`;
     if (options.path) cookieString += `; path=${options.path}`;
@@ -140,7 +215,14 @@ function setCookie(name, value, options = {}) {
     document.cookie = cookieString;
 }
 
-
+/**
+ * Stores an encrypted private key in IndexedDB
+ * 
+ * @param {string} key - The encrypted key
+ * @param {string} iv - The initialization vector used for encryption
+ * @param {string} salt - The salt used for key derivation
+ * @returns {Promise<null>} Returns null on error
+ */
 async function insertKey(key, iv, salt) {
     try {
         const db = await idb.openDB('gluecrypt', 2, {
@@ -158,6 +240,12 @@ async function insertKey(key, iv, salt) {
     }
 }
 
+/**
+ * Retrieves the encrypted private key from IndexedDB
+ * 
+ * @returns {Promise<string>} The encrypted key in format "encrypted|iv:salt"
+ * @throws {Error} If the key is not found or another error occurs
+ */
 async function checkAuthKey() {
     try {
         const db = await idb.openDB('gluecrypt', 2, {
@@ -176,7 +264,6 @@ async function checkAuthKey() {
             const notfound = document.getElementById('notFoundKey');
             notfound.hidden = false;
             throw new Error('Not found.');
-
         }
     } catch (error) {
         console.error('Failed to process key:', error);
@@ -184,6 +271,15 @@ async function checkAuthKey() {
     }
 }
 
+/**
+ * Generates an authentication key from a mnemonic phrase
+ * 
+ * Converts a user-provided mnemonic phrase into a cryptographic key using
+ * the BIP-39 standard and HD wallet derivation.
+ * 
+ * @returns {string} The generated private key
+ * @throws {Error} If the mnemonic is invalid or key generation fails
+ */
 function generateAuthKey() {
     try {
         const authKeyInput = document.getElementById('authkey').value;
@@ -198,15 +294,21 @@ function generateAuthKey() {
 
         const hdNode = ethers.HDNodeWallet.fromSeed(seed);
         return hdNode.privateKey;
-
-
     } catch (error) {
         console.error('Failed to generate auth key:', error);
         throw error;
     }
 }
 
-
+/**
+ * Encrypts data using AES-CBC algorithm
+ * 
+ * @param {string} data - The data to encrypt
+ * @param {string} iv - The initialization vector
+ * @param {string} AESKey - The AES encryption key
+ * @returns {string} Base64-encoded encrypted data
+ * @throws {Error} If encryption fails
+ */
 function aes_encrypt(data, iv, AESKey) {
     try {
         let encrypt = forge.cipher.createCipher('AES-CBC', AESKey);
@@ -222,6 +324,15 @@ function aes_encrypt(data, iv, AESKey) {
     }
 }
 
+/**
+ * Decrypts data using AES-CBC algorithm
+ * 
+ * @param {string} encryptedData - Base64-encoded encrypted data
+ * @param {string} iv - The initialization vector
+ * @param {string} AESKey - The AES decryption key
+ * @returns {string} The decrypted data as raw binary
+ * @throws {Error} If decryption fails
+ */
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
         let decrypt = forge.cipher.createDecipher('AES-CBC', AESKey);
@@ -239,6 +350,24 @@ function aes_decrypt(encryptedData, iv, AESKey) {
 
 
 
+/**
+ * Main login function implementing Zero-Knowledge Proof authentication
+ * 
+ * This function performs a secure authentication process with the following steps:
+ * 1. Performs key exchange with the server to establish a secure channel
+ * 2. Retrieves or generates the authentication key using three-factor authentication
+ * 3. Gets a challenge from the server
+ * 4. Signs the challenge with the private key
+ * 5. Encrypts and sends the authentication data to the server
+ * 
+ * The authentication flow is designed to ensure the private key is never exposed
+ * and can only be used when all three authentication factors are present:
+ * - Device ID (something you have)
+ * - Browser fingerprint (something you are)
+ * - Server-provided baseKey (something you know)
+ * 
+ * @returns {Promise<void>}
+ */
 async function login() {
     try {
         let login = document.getElementById('login').value;
@@ -327,7 +456,7 @@ async function login() {
         const keyPair = ec.keyFromPrivate(authKey.slice(2));
         const signature = keyPair.sign(challengeJWT);
         const derSignatureHex = signature.toDER('hex');
-        
+
         // 5. Send authentication data
         console.log('Encrypting data...');
         let iv = forge.random.getBytesSync(16);
@@ -386,7 +515,7 @@ async function login() {
 }
 
 
-// The authenticate function has been integrated into the login function
+
 
 
 
