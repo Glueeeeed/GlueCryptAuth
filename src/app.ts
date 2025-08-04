@@ -29,7 +29,7 @@ import helmet from 'helmet';
 import {colors} from "./utils/chalk";
 
 //Uncomment when httpsMode is enabled
-import {options} from "./config/ssl";
+// import {options} from "./config/ssl";
 // import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings"; //Uncomment when helmet is enabled
 import {corsEnabled, httpsMode, PORT, domain, helmetEnabled} from "./config/settings"; //Comment when helmet is enabled
 
@@ -45,7 +45,7 @@ const port : number = PORT
 
 //Uncomment when httpsMode is enabled
 
-const ssl = options
+// const ssl = options
 
 
 //Middlewares
@@ -93,11 +93,11 @@ app.get('/', secured, (req: Request, res: Response) => {
 
 if (httpsMode === true) {
     console.group(colors.category('Core App'))
-    https.createServer(ssl, app).listen(port, "0.0.0.0", () => {
-
-        console.log(colors.info(`App running at glueeed.dev:${port}`));
-
-    });
+    // https.createServer(ssl, app).listen(port, "0.0.0.0", () => {
+    //
+    //     console.log(colors.info(`App running at glueeed.dev:${port}`));
+    //
+    // });
     console.groupEnd()
 
 } else {

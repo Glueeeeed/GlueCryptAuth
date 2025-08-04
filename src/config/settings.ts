@@ -13,7 +13,7 @@ export const domain : string = "http://localhost";
 //Runs application on the selected port
 export const PORT : number = 3000;
 // If is true, CORS is enabled
-export const corsEnabled : boolean = false;
+export const corsEnabled : boolean = true;
 // If is true, helmet is enabled
 export const helmetEnabled : boolean = false;
 

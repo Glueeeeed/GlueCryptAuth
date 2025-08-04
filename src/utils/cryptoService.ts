@@ -20,3 +20,20 @@ export function data_decrypt(data: string, iv: string, secretkey: string): strin
     }
 }
 
+export function data_encrypt(data: string, iv: string, secretkey: string): string {
+    
+    const encrypt = forge.cipher.createCipher('AES-CBC', secretkey);
+    
+    encrypt.start({ iv: forge.util.createBuffer(iv) });
+    
+    encrypt.update(forge.util.createBuffer(data));
+    
+    const success = encrypt.finish();
+    
+    if (success) {
+        return forge.util.encode64(encrypt.output.data);
+    } else {
+        throw new Error('Encryption Failed');
+    }
+}
+

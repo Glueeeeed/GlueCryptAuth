@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import {secretjwt} from '../config/secrets';
+import {sessionSecretJwt} from '../config/secrets';
 import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
@@ -19,7 +19,7 @@ export const secured = (req: Request, res: Response, next: NextFunction): void =
 
     let decoded: JwtPayload;
     try {
-        decoded = jwt.verify(token, secretjwt) as JwtPayload;
+        decoded = jwt.verify(token, sessionSecretJwt) as JwtPayload;
     } catch (error: any) {
         console.error('Failed verify token:', error.message);
         res.clearCookie('access_token');

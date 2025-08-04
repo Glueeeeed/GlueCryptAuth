@@ -8,7 +8,7 @@ import {deleteSecret, getSlicedSecret} from "./keyExchangeController";
 import {data_decrypt} from "../utils/cryptoService";
 import {ValidateZKP} from "../utils/validation";
 import {jwtWrapper} from "../utils/jwtWrapper";
-import {secret_verify, secretjwt} from "../config/secrets"
+import {challengeSecretJwt, sessionSecretJwt, appBaseKeySecret} from "../config/secrets"
 import KeyPair = EC.KeyPair;
 import {colors} from "../utils/chalk";
 
@@ -21,6 +21,7 @@ interface registerRequest {
 
 interface registerResponse {
     response: string;
+    basekey: string;
 }
 
 interface loginRequest {
@@ -35,6 +36,7 @@ interface loginRequest {
 
 interface loginResponse {
     token: string;
+    basekey: string;
 }
 
 interface ChallengeRequest {
@@ -56,6 +58,12 @@ export const  register   =  (req: Request<{}, {}, registerRequest>, res: Respons
     const iv : string = req.body.iv;
     const sessionID : string = req.body.sessionID;
     const secretkey : string = getSlicedSecret(sessionID);
+
+    console.group(colors.category('AuthController'));
+    console.log(colors.warning(encrypted_publicKey));
+    console.groupEnd()
+
+
 
     const publickey : string = data_decrypt(encrypted_publicKey, iv, secretkey);
     const login = data_decrypt(encrypted_login,iv,secretkey);
@@ -108,7 +116,7 @@ export const  register   =  (req: Request<{}, {}, registerRequest>, res: Respons
             }
 
             await db.execute('INSERT INTO usersZKP (login, publickey, admin, uuid) VALUES (?, ?, False, ?)', [login, publickey, uuid]);
-            res.json({response: "Successfully registered! Save your secret key, it will not be shown again!"});
+            res.json({response: "Successfully registered! Save your secret key, it will not be shown again!", basekey: appBaseKeySecret});
             console.group(colors.category('AuthController'));
             console.log(colors.success(`Successfully registered. User: ${uuid}`))
             deleteSecret(sessionID);
@@ -185,11 +193,11 @@ export const  login   = (req: Request<{}, {}, loginRequest>, res: Response<login
 
                 const token= jwtLib.sign(
                     {uuid},
-                    secretjwt,
-                    {expiresIn: '1h'}
+                    sessionSecretJwt,
+                    {expiresIn: '15m'}
                 );
                 deleteSecret(sessionID);
-                return res.json({token: token})
+                return res.json({token: token, basekey: appBaseKeySecret})
             } else {
                 deleteSecret(sessionID);
                 return res.status(401).json({error: "Invalid Credentials"});
@@ -220,8 +228,8 @@ export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: R
     const challenge : string = crypto.randomBytes(16).toString('hex');
     const challengeJWT : string = jwtLib.sign(
         {challenge,deviceID},
-        secret_verify,
-        {expiresIn: '1m'}
+        challengeSecretJwt,
+        {expiresIn: '30s'}
     );
     return res.json({challenge: challengeJWT})
 }
