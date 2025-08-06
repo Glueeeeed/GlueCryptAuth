@@ -23,11 +23,7 @@ import {challengeSecretJwt, sessionSecretJwt, appBaseKeySecret} from "../config/
 import KeyPair = EC.KeyPair;
 import {colors} from "../utils/chalk";
 
-/**
- * Interface defining the expected request body for user registration
- * 
- * @interface registerRequest
- */
+
 interface registerRequest {
     /** The user's encrypted public key */
     publickey: string;
@@ -39,11 +35,7 @@ interface registerRequest {
     sessionID: string;
 }
 
-/**
- * Interface defining the response structure for successful registration
- * 
- * @interface registerResponse
- */
+
 interface registerResponse {
     /** Response message indicating registration status */
     response: string;
@@ -51,11 +43,7 @@ interface registerResponse {
     basekey: string;
 }
 
-/**
- * Interface defining the expected request body for user login
- * 
- * @interface loginRequest
- */
+
 interface loginRequest {
     /** The encrypted user login/username */
     login: string;
@@ -71,11 +59,7 @@ interface loginRequest {
     iv: string;
 }
 
-/**
- * Interface defining the response structure for successful login
- * 
- * @interface loginResponse
- */
+
 interface loginResponse {
     /** Authentication token for subsequent API requests */
     token: string;
@@ -83,26 +67,15 @@ interface loginResponse {
     basekey: string;
 }
 
-/**
- * Interface defining the expected request body for challenge generation
- * 
- * @interface ChallengeRequest
- */
 interface ChallengeRequest {
     /** The device identifier */
     deviceID: string;
 }
 
-/**
- * Interface defining the response structure for challenge generation
- * 
- * @interface ChallengeResponse
- */
 interface ChallengeResponse {
     /** The challenge token to be signed by the client */
     challenge: string;
 }
-
 
 
 
@@ -121,6 +94,9 @@ interface ChallengeResponse {
  * @param {Response} res - Express response object
  * @returns {void}
  */
+
+
+
 export const register = (req: Request<{}, {}, registerRequest>, res: Response<registerResponse | { error: string }>): void => {
     // Extract encrypted data from request
     const encrypted_publicKey : string = req.body.publickey;
@@ -147,6 +123,7 @@ export const register = (req: Request<{}, {}, registerRequest>, res: Response<re
      * 
      * @returns {Promise<any>} Promise that resolves when registration is complete
      */
+
     async function registerUSER() : Promise<any> {
         const uuid: string = crypto.randomUUID();
         let isValid : string = ValidateZKP(login);
@@ -228,6 +205,9 @@ export const register = (req: Request<{}, {}, registerRequest>, res: Response<re
  * @param {Response} res - Express response object
  * @returns {void}
  */
+
+
+
 export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginResponse | { error: string }>): void => {
     // Extract encrypted data from request
     const encrypted_login : string = req.body.login;
@@ -261,6 +241,9 @@ export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginRes
      * @param {string} clientPublicKeyHex - The client's public key in hexadecimal format
      * @returns {boolean} True if the signature is valid, false otherwise
      */
+
+
+
     function verifyClientSignature(challenge: string, signatureHex: string, clientPublicKeyHex:string) {
         try {
             const key : KeyPair = ec.keyFromPublic(clientPublicKeyHex, 'hex');
@@ -283,6 +266,9 @@ export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginRes
      * 
      * @returns {Promise<any>} Promise that resolves when authentication is complete
      */
+
+
+
     async function auth() : Promise<any> {
         try {
 
@@ -335,7 +321,7 @@ export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginRes
 }
 
 /**
- * Generates a cryptographic challenge for Zero-Knowledge Proof authentication
+ * Generates a cryptographic challenge
  * 
  * This controller function creates a random challenge that the client must sign
  * with their private key to prove their identity. The challenge is:
@@ -348,6 +334,9 @@ export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginRes
  * @param {Response} res - Express response object
  * @returns {any} Response containing the challenge JWT
  */
+
+
+
 export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: Response<ChallengeResponse>): any => {
     // Extract the device ID from the request
     const deviceID : string = req.body.deviceID;

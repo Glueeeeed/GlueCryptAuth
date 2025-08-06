@@ -1,9 +1,10 @@
 
 /**
- * GlueCryptAuth - Zero Knowledge Proof Authentication System
- * 
+ * GlueCryptAuth - Secure Authentication System
+ *
  * This module handles the secure login process using elliptic curve cryptography,
- * zero-knowledge proofs, and multi-factor authentication with device fingerprinting.
+ * digital signatures inspired by zero-knowledge principles, and multi-factor
+ * authentication with device fingerprinting.
  */
 
 // Initialize elliptic curve with P-256 standard
@@ -34,9 +35,12 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
 /**
  * Resets the user's authentication key from IndexedDB storage
- * 
+ *
  * @returns {Promise<null>} Returns null on error
  */
+
+
+
 async function resetKey() {
     try {
         const db = await idb.openDB('gluecrypt', 2, {
@@ -56,10 +60,13 @@ async function resetKey() {
 
 /**
  * Decodes a base64url encoded string to UTF-8
- * 
+ *
  * @param {string} str - The base64url encoded string
  * @returns {string} The decoded string
  */
+
+
+
 function base64UrlDecode(str) {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = atob(str);
@@ -72,10 +79,13 @@ function base64UrlDecode(str) {
 
 /**
  * Validates the format of a mnemonic phrase
- * 
+ *
  * @param {string} mnemonic - The mnemonic phrase to validate
  * @returns {boolean} True if the mnemonic is valid, false otherwise
  */
+
+
+
 function validateMnemonic(mnemonic) {
     if (!mnemonic.includes("-")) {
         return false;
@@ -90,23 +100,16 @@ function validateMnemonic(mnemonic) {
     return true;
 }
 
-/**
- * Extracts and decodes the payload from a JWT token
- * 
- * @param {string} token - The JWT token
- * @returns {Object} The decoded payload as a JavaScript object
- * @throws {Error} If the token is invalid
- */
+
+
 function decodeJwtPayload(token) {
     const payloadBase64Url = token.split('.')[1];
     if (!payloadBase64Url) throw new Error('Invalid token');
     return JSON.parse(base64UrlDecode(payloadBase64Url));
 }
 
-/**
- * Toggles between light and dark theme based on user preference
- * Saves the preference to localStorage for persistence
- */
+
+
 function themeChange() {
     const mode = document.getElementById("darkModeSwitch");
     const modeMobile = document.getElementById("darkModeSwitchMobile");
@@ -128,9 +131,12 @@ function themeChange() {
 
 /**
  * Retrieves the browser fingerprint using ThumbmarkJS
- * 
+ *
  * @returns {Promise<Object>} The fingerprint object
  */
+
+
+
 async function getFingerprint() {
     const tm = new ThumbmarkJS.Thumbmark();
     const fingerprint = await tm.get();
@@ -139,16 +145,19 @@ async function getFingerprint() {
 
 /**
  * Secures a private key using a combination of device fingerprint, device ID, and server-provided base key
- * 
+ *
  * This function implements a multi-factor encryption approach where the key can only be
  * decrypted when all three components (fingerprint, deviceID, baseKey) are present.
- * 
+ *
  * @param {string} fingerprint - The browser fingerprint
  * @param {string} privateKey - The private key to secure
  * @param {string} deviceID - The unique device identifier
  * @param {string} baseKey - The server-provided component of the encryption key
  * @returns {Object} Object containing the encrypted key, initialization vector, and salt
  */
+
+
+
 function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
     const md = forge.md.sha384.create();
     md.update(deviceID + fingerprint + baseKey);
@@ -165,19 +174,38 @@ function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
 
 /**
  * Decrypts a secured private key using the three-factor authentication components
- * 
+ *
  * @param {string} encryptedKey - The encrypted key in format "encrypted|iv:salt"
  * @param {string} deviceID - The unique device identifier
  * @param {string} baseKey - The server-provided component of the encryption key
  * @param {string} fingerprint - The browser fingerprint
  * @returns {string} The decrypted private key
  */
+
+
+
 async function decryptSecuredKey(encryptedKey, deviceID, baseKey, fingerprint) {
     const md = forge.md.sha384.create();
     md.update(deviceID + fingerprint + baseKey);
     const hashedData = md.digest().toHex()
+
+    // Key format verification
+    if (typeof encryptedKey !== 'string' || !encryptedKey.includes('|') || !encryptedKey.includes(':')) {
+        throw new Error('Authentication key is corrupted. Please reset your key and add it again.');
+    }
+
     const [encrypted, iv] = encryptedKey.split('|');
+
+    if (!iv || !iv.includes(':')) {
+        throw new Error('Authentication key is corrupted. Please reset your key and add it again.');
+    }
+
     const [extractedIv, extractedSalt] = iv.split(':');
+
+    if (!extractedIv || !extractedSalt) {
+        throw new Error('Authentication key is corrupted. Please reset your key and add it again.');
+    }
+
     const extractedSaltBytes = forge.util.hexToBytes(extractedSalt);
     const extractedIvBytes = forge.util.hexToBytes(extractedIv);
     const key = forge.pkcs5.pbkdf2(hashedData, extractedSaltBytes, 100000, 32, forge.sha256.create());
@@ -187,11 +215,9 @@ async function decryptSecuredKey(encryptedKey, deviceID, baseKey, fingerprint) {
     return decrypted;
 }
 
-/**
- * Ensures a device ID exists in localStorage, creating one if needed
- * 
- * The device ID is one of the three factors used in the authentication process.
- */
+
+
+
 function verifyDeviceID() {
     if (localStorage.getItem('DeviceID') === null) {
         const DeviceID = crypto.randomUUID();
@@ -199,13 +225,7 @@ function verifyDeviceID() {
     }
 }
 
-/**
- * Sets a browser cookie with the specified options
- * 
- * @param {string} name - The name of the cookie
- * @param {string} value - The value to store in the cookie
- * @param {Object} options - Cookie options (path, expires, sameSite, secure)
- */
+
 function setCookie(name, value, options = {}) {
     let cookieString = `${name}=${value}`;
     if (options.path) cookieString += `; path=${options.path}`;
@@ -217,12 +237,15 @@ function setCookie(name, value, options = {}) {
 
 /**
  * Stores an encrypted private key in IndexedDB
- * 
+ *
  * @param {string} key - The encrypted key
  * @param {string} iv - The initialization vector used for encryption
  * @param {string} salt - The salt used for key derivation
  * @returns {Promise<null>} Returns null on error
  */
+
+
+
 async function insertKey(key, iv, salt) {
     try {
         const db = await idb.openDB('gluecrypt', 2, {
@@ -242,10 +265,13 @@ async function insertKey(key, iv, salt) {
 
 /**
  * Retrieves the encrypted private key from IndexedDB
- * 
+ *
  * @returns {Promise<string>} The encrypted key in format "encrypted|iv:salt"
  * @throws {Error} If the key is not found or another error occurs
  */
+
+
+
 async function checkAuthKey() {
     try {
         const db = await idb.openDB('gluecrypt', 2, {
@@ -273,13 +299,16 @@ async function checkAuthKey() {
 
 /**
  * Generates an authentication key from a mnemonic phrase
- * 
+ *
  * Converts a user-provided mnemonic phrase into a cryptographic key using
  * the BIP-39 standard and HD wallet derivation.
- * 
+ *
  * @returns {string} The generated private key
  * @throws {Error} If the mnemonic is invalid or key generation fails
  */
+
+
+
 function generateAuthKey() {
     try {
         const authKeyInput = document.getElementById('authkey').value;
@@ -302,20 +331,23 @@ function generateAuthKey() {
 
 /**
  * Encrypts data using AES-CBC algorithm
- * 
+ *
  * @param {string} data - The data to encrypt
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES encryption key
  * @returns {string} Base64-encoded encrypted data
  * @throws {Error} If encryption fails
  */
+
+
+
 function aes_encrypt(data, iv, AESKey) {
     try {
         let encrypt = forge.cipher.createCipher('AES-CBC', AESKey);
         encrypt.start({ iv: iv });
         encrypt.update(forge.util.createBuffer(data, 'utf-8'));
         encrypt.finish();
-        
+
         let encrypted = forge.util.encode64(encrypt.output.getBytes());
         return encrypted;
     } catch (error) {
@@ -326,20 +358,23 @@ function aes_encrypt(data, iv, AESKey) {
 
 /**
  * Decrypts data using AES-CBC algorithm
- * 
+ *
  * @param {string} encryptedData - Base64-encoded encrypted data
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES decryption key
  * @returns {string} The decrypted data as raw binary
  * @throws {Error} If decryption fails
  */
+
+
+
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
         let decrypt = forge.cipher.createDecipher('AES-CBC', AESKey);
         decrypt.start({ iv: iv });
         decrypt.update(forge.util.createBuffer(forge.util.decode64(encryptedData)));
         decrypt.finish();
-        
+
         // Return raw data instead of assuming UTF-8 encoding
         return decrypt.output.data;
     } catch (error) {
@@ -351,36 +386,43 @@ function aes_decrypt(encryptedData, iv, AESKey) {
 
 
 /**
- * Main login function implementing Zero-Knowledge Proof authentication
- * 
+ * Main login function
+ *
  * This function performs a secure authentication process with the following steps:
  * 1. Performs key exchange with the server to establish a secure channel
  * 2. Retrieves or generates the authentication key using three-factor authentication
  * 3. Gets a challenge from the server
  * 4. Signs the challenge with the private key
  * 5. Encrypts and sends the authentication data to the server
- * 
+ *
  * The authentication flow is designed to ensure the private key is never exposed
  * and can only be used when all three authentication factors are present:
  * - Device ID (something you have)
  * - Browser fingerprint (something you are)
  * - Server-provided baseKey (something you know)
- * 
+ *
  * @returns {Promise<void>}
  */
+
+
+
 async function login() {
     try {
-        let login = document.getElementById('login').value;
+        // Validate user input
+        const login = document.getElementById('login').value;
+        if (!login || login.trim() === "") {
+            throw new Error("User ID cannot be empty");
+        }
         const notfound = document.getElementById('notFoundKey').hidden;
         const DeviceID = localStorage.getItem('DeviceID');
         const fingerprintObj = await getFingerprint();
         const fingerprint = fingerprintObj.thumbmark;
-        
+
         // 1. First perform key exchange to get the baseKey
         console.log('Performing key exchange...');
         let clientPairKeys = ec.genKeyPair();
         let clientPublicKey = clientPairKeys.getPublic('hex');
-        
+
         const keyExchangeResponse = await fetch('http://localhost:3000/api/keyexchange', {
             method: 'POST',
             headers: {
@@ -409,10 +451,10 @@ async function login() {
         const serverPublicKeyObj = ec.keyFromPublic(serverPublicKey, 'hex');
         const secret = clientPairKeys.derive(serverPublicKeyObj.getPublic());
         const AESKey = secret.toString('hex').slice(0, 32);
-        
+
         // Decrypt the baseKey
         const baseKey = aes_decrypt(encrypted_baseKey, appBaseIV, AESKey);
-        
+
         // 2. Now prepare the private key (decrypt existing or generate new)
         let authKey;
         if (notfound === true) {
@@ -423,12 +465,12 @@ async function login() {
             console.log('Generating new key...');
             authKey = generateAuthKey();
             isGeneratedKey = true;
-            
+
             // Save the new key immediately
             const encrypted_privateKey = secureSessionKey(fingerprint, authKey, DeviceID, baseKey);
             await insertKey(encrypted_privateKey.encryptedKey, encrypted_privateKey.iv, encrypted_privateKey.salt);
         }
-        
+
         // 3. Now get the challenge
         console.log('Getting challenge...');
         const challengeResponse = await fetch("http://localhost:3000/api/auth/getZKPChallenge", {
@@ -440,17 +482,17 @@ async function login() {
                 deviceID: DeviceID,
             })
         });
-        
+
         if (!challengeResponse.ok) {
             const errorData = await challengeResponse.json();
             throw new Error(errorData.error);
         }
-        
+
         const challengeData = await challengeResponse.json();
         const challenge = challengeData.challenge;
         const payload = decodeJwtPayload(challenge);
         const challengeJWT = payload.challenge;
-        
+
         // 4. Sign the challenge with the properly decrypted key
         console.log('Signing challenge...');
         const keyPair = ec.keyFromPrivate(authKey.slice(2));
@@ -465,7 +507,7 @@ async function login() {
         let encrypted_challenge = aes_encrypt(derSignatureHex, ivHex, AESKey);
         let encrypted_deviceID = aes_encrypt(DeviceID, ivHex, AESKey);
         let encrypted_jwt = aes_encrypt(challenge, ivHex, AESKey);
-        
+
         // Verify all data was encrypted properly
         if (encrypted_challenge && encrypted_login && encrypted_deviceID && encrypted_jwt) {
             console.log('Successfully encrypted data');
@@ -473,7 +515,7 @@ async function login() {
         } else {
             throw new Error('Failed to encrypt data..');
         }
-        
+
         // Send authentication request
         const authResponse = await fetch('http://localhost:3000/api/auth/login', {
             method: 'POST',
@@ -489,25 +531,25 @@ async function login() {
             credentials: 'include',
             redirect: 'follow'
         });
-        
+
         if (!authResponse.ok) {
             const errorData = await authResponse.json();
             throw new Error(errorData.error);
         }
-        
+
         // Process successful authentication
         const authData = await authResponse.json();
         console.log('Data received from server...');
         console.log('Operation successful');
-        
+
         setCookie("access_token", authData.token, {
             'max-age': 3600,
             'secure': true,
             'samesite': 'strict',
             'path': '/'
         });
-        
-        window.location.href = "http://localhost:3000/";
+
+        window.location.href = "https://glueeed.dev:6969/";
     } catch (error) {
         console.error("Login failed:", error);
         alert("Login failed: " + error.message);

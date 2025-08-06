@@ -21,21 +21,13 @@ const ec = new EC('p256');
 // In-memory storage for session secrets
 const Secrets = new Map<string, string>();
 
-/**
- * Interface defining the expected request body for key exchange
- * 
- * @interface KeyExchangeRequest
- */
+
 interface KeyExchangeRequest {
     /** The client's public key in hexadecimal format */
     clientPublicKey: string;
 }
 
-/**
- * Interface defining the response structure for key exchange
- * 
- * @interface KeyExchangeResponse
- */
+
 interface KeyExchangeResponse {
     /** The server's public key in hexadecimal format */
     serverPublicKey: string;
@@ -63,6 +55,9 @@ interface KeyExchangeResponse {
  * @param {Response} res - Express response object
  * @returns {void}
  */
+
+
+
 export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, res: Response<KeyExchangeResponse | { error: string }>): void => {
     console.group(colors.category('KeyExchangeController'));
     const { clientPublicKey } = req.body;
@@ -111,6 +106,9 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
  * @returns {string} The shared secret key
  * @throws {Error} If the session ID is invalid or not found
  */
+
+
+
 export const getSlicedSecret = (sessionID: string): string => {
     const secret : string | undefined = Secrets.get(sessionID);
     if (!secret) {
@@ -131,6 +129,9 @@ export const getSlicedSecret = (sessionID: string): string => {
  * @returns {void}
  * @throws {Error} If the session ID is invalid or not found
  */
+
+
+
 export const deleteSecret = (sessionID: string) : void => {
     try {
         if (Secrets.delete(sessionID)) {

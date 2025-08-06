@@ -1,9 +1,9 @@
 /**
- * GlueCryptAuth - Zero Knowledge Proof Registration System
- * 
+ * GlueCryptAuth - Secure Authentication System
+ *
  * This module handles the secure registration process using elliptic curve cryptography,
- * zero-knowledge proofs, and multi-factor authentication with device fingerprinting.
- * It generates and securely stores cryptographic keys for future authentication.
+ * digital signatures inspired by zero-knowledge principles, and multi-factor
+ * authentication with device fingerprinting.
  */
 
 // Initialize elliptic curve with P-256 standard
@@ -31,10 +31,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
 });
 
-/**
- * Toggles between light and dark theme based on user preference
- * Saves the preference to localStorage for persistence
- */
+
 function themeChange() {
     const mode = document.getElementById("darkModeSwitch");
     const modeMobile = document.getElementById("darkModeSwitchMobile");
@@ -58,6 +55,9 @@ function themeChange() {
  * Copies the generated mnemonic phrase to the clipboard
  * This allows users to save their recovery phrase
  */
+
+
+
 function copyTextToClipboard() {
     if (!navigator.clipboard) {
         alert('Copying to the clipboard is not supported in this browser.');
@@ -70,9 +70,12 @@ function copyTextToClipboard() {
 
 /**
  * Retrieves the browser fingerprint using ThumbmarkJS
- * 
+ *
  * @returns {Promise<Object>} The fingerprint object
  */
+
+
+
 async function getFingerprint() {
     const tm = new ThumbmarkJS.Thumbmark();
     const fingerprint = await tm.get();
@@ -89,8 +92,10 @@ async function getFingerprint() {
  * @param {string} privateKey - The private key to secure
  * @param {string} deviceID - The unique device identifier
  * @param {string} baseKey - The server-provided component of the encryption key
- * @returns {Object} Object containing the encrypted key, initialization vector, and salt
  */
+
+
+
 function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
     const md = forge.md.sha384.create();
     md.update(deviceID + fingerprint + baseKey);
@@ -110,17 +115,16 @@ function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
  * 
  * This ensures users can restart the registration process if needed
  */
+
+
+
 function resetRegistered() {
     if (localStorage.getItem('is_Registered') !== null) {
         localStorage.removeItem('is_Registered')
     }
 }
 
-/**
- * Ensures a device ID exists in localStorage, creating one if needed
- * 
- * The device ID is one of the three factors used in the authentication process
- */
+
 function verifyDeviceID() {
     if (localStorage.getItem('DeviceID') === null) {
         const DeviceID = crypto.randomUUID();
@@ -134,9 +138,10 @@ function verifyDeviceID() {
  * @param {string} data - The data to encrypt
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES encryption key
- * @returns {string} Base64-encoded encrypted data
- * @throws {Error} If encryption fails
  */
+
+
+
 function aes_encrypt(data, iv, AESKey) {
     try {
         let encrypt = forge.cipher.createCipher('AES-CBC', AESKey);
@@ -158,9 +163,10 @@ function aes_encrypt(data, iv, AESKey) {
  * @param {string} encryptedData - Base64-encoded encrypted data
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES decryption key
- * @returns {string} The decrypted data as raw binary
- * @throws {Error} If decryption fails
  */
+
+
+
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
         let decrypt = forge.cipher.createDecipher('AES-CBC', AESKey);
@@ -184,9 +190,10 @@ function aes_decrypt(encryptedData, iv, AESKey) {
  * The mnemonic phrase is displayed to the user as a recovery mechanism.
  * 
  * @param {boolean} userRegistered - Flag indicating if user is already registered
- * @returns {Object} Object containing the public and private keys
- * @throws {Error} If user is already registered or key generation fails
  */
+
+
+
 function generateAuthKeys(userRegistered) {
     const bipkey = document.getElementById('bipkey');
     if (localStorage.getItem('is_Registered') !== null){
@@ -217,8 +224,9 @@ function generateAuthKeys(userRegistered) {
  * @param {string} key - The encrypted key
  * @param {string} iv - The initialization vector used for encryption
  * @param {string} salt - The salt used for key derivation
- * @returns {Promise<null>} Returns null on error
  */
+
+
 
 async function insertKey(key, iv, salt) {
     try {
@@ -251,9 +259,11 @@ async function insertKey(key, iv, salt) {
  * - Device ID (something you have)
  * - Browser fingerprint (something you are)
  * - Server-provided baseKey (something you know)
- * 
- * @returns {Promise<void>}
+ *
  */
+
+
+
 async function register(){
     try {
         // Validate user input
