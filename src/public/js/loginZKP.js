@@ -1,4 +1,3 @@
-
 /**
  * GlueCryptAuth - Secure Authentication System
  *
@@ -6,6 +5,8 @@
  * digital signatures inspired by zero-knowledge principles, and multi-factor
  * authentication with device fingerprinting.
  */
+
+
 
 // Initialize elliptic curve with P-256 standard
 let ec = new elliptic.ec('p256');
@@ -51,7 +52,7 @@ async function resetKey() {
             }
         });
         await db.delete('keys', 'privateKey');
-        alert('Key reset successfully!');
+        console.log('Deleted keys from DB');
     } catch (error) {
         console.error('Failed to save:', error);
         return null;
@@ -191,19 +192,22 @@ async function decryptSecuredKey(encryptedKey, deviceID, baseKey, fingerprint) {
 
     // Key format verification
     if (typeof encryptedKey !== 'string' || !encryptedKey.includes('|') || !encryptedKey.includes(':')) {
-        throw new Error('Authentication key is corrupted. Please reset your key and add it again.');
+        resetKey();
+        throw new Error("Authentication key is corrupted. Key has been removed! You must add it again");
     }
 
     const [encrypted, iv] = encryptedKey.split('|');
 
     if (!iv || !iv.includes(':')) {
-        throw new Error('Authentication key is corrupted. Please reset your key and add it again.');
+        resetKey();
+        throw new Error("Authentication key is corrupted. Key has been removed! You must add it again");
     }
 
     const [extractedIv, extractedSalt] = iv.split(':');
 
     if (!extractedIv || !extractedSalt) {
-        throw new Error('Authentication key is corrupted. Please reset your key and add it again.');
+        resetKey();
+        throw new Error("Authentication key is corrupted. Key has been removed! You must add it again");
     }
 
     const extractedSaltBytes = forge.util.hexToBytes(extractedSalt);
@@ -289,7 +293,7 @@ async function checkAuthKey() {
         } else {
             const notfound = document.getElementById('notFoundKey');
             notfound.hidden = false;
-            throw new Error('Not found.');
+            throw new Error('Authentication key has not found.');
         }
     } catch (error) {
         console.error('Failed to process key:', error);
@@ -330,26 +334,34 @@ function generateAuthKey() {
 }
 
 /**
- * Encrypts data using AES-CBC algorithm
+ * Encrypts data using AES-GCM algorithm
  *
  * @param {string} data - The data to encrypt
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES encryption key
- * @returns {string} Base64-encoded encrypted data
+ * @returns {string} Base64-encoded encrypted data with authentication tag
  * @throws {Error} If encryption fails
  */
 
-
-
 function aes_encrypt(data, iv, AESKey) {
     try {
-        let encrypt = forge.cipher.createCipher('AES-CBC', AESKey);
-        encrypt.start({ iv: iv });
+        // Use first 12 bytes for GCM IV
+        let gcmIv = iv;
+        if (iv.length > 12) {
+            gcmIv = iv.substring(0, 12);
+        }
+
+        let encrypt = forge.cipher.createCipher('AES-GCM', AESKey);
+        encrypt.start({
+            iv: gcmIv,
+            tagLength: 128 // 128 bits for authentication tag
+        });
         encrypt.update(forge.util.createBuffer(data, 'utf-8'));
         encrypt.finish();
-
-        let encrypted = forge.util.encode64(encrypt.output.getBytes());
-        return encrypted;
+        
+        // Combine encrypted data and tag
+        const encryptedData =  encrypt.mode.tag.getBytes() + encrypt.output.getBytes()
+        return forge.util.encode64(encryptedData);
     } catch (error) {
         console.error("Encryption error:", error);
         throw error;
@@ -357,25 +369,46 @@ function aes_encrypt(data, iv, AESKey) {
 }
 
 /**
- * Decrypts data using AES-CBC algorithm
+ * Decrypts data using AES-GCM algorithm
  *
- * @param {string} encryptedData - Base64-encoded encrypted data
+ * @param {string} encryptedData - Base64-encoded encrypted data with authentication tag
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES decryption key
  * @returns {string} The decrypted data as raw binary
- * @throws {Error} If decryption fails
+ * @throws {Error} If decryption fails or authentication fails
  */
-
-
 
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
-        let decrypt = forge.cipher.createDecipher('AES-CBC', AESKey);
-        decrypt.start({ iv: iv });
-        decrypt.update(forge.util.createBuffer(forge.util.decode64(encryptedData)));
-        decrypt.finish();
-
-        // Return raw data instead of assuming UTF-8 encoding
+        // Use first 12 bytes for GCM IV
+        let gcmIv = iv;
+        if (iv.length > 12) {
+            gcmIv = iv.substring(0, 12);
+        }
+        
+        // Decode the base64 data
+        const encryptedBytes = forge.util.decode64(encryptedData);
+        
+        // Extract ciphertext and tag (first 16 bytes)
+        const tag = encryptedBytes.slice(0,16);
+        const bytes = encryptedBytes.slice(16, encryptedBytes.length);
+        
+        // Create decipher
+        let decrypt = forge.cipher.createDecipher('AES-GCM', AESKey);
+        decrypt.start({
+            iv: gcmIv,
+            tag: forge.util.createBuffer(tag),
+            tagLength: 128
+        });
+        decrypt.update(forge.util.createBuffer(bytes));
+        
+        // Finish and verify authentication
+        const pass = decrypt.finish();
+        if (!pass) {
+            resetKey();
+            throw new Error("Authentication key is corrupted. Key has been removed! You must add it again");
+        }
+        
         return decrypt.output.data;
     } catch (error) {
         console.error("Decryption error:", error);

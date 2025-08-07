@@ -6,6 +6,7 @@
  * authentication with device fingerprinting.
  */
 
+
 // Initialize elliptic curve with P-256 standard
 let ec = new elliptic.ec('p256');
 
@@ -132,25 +133,25 @@ function verifyDeviceID() {
     }
 }
 
-/**
- * Encrypts data using AES-CBC algorithm
- * 
- * @param {string} data - The data to encrypt
- * @param {string} iv - The initialization vector
- * @param {string} AESKey - The AES encryption key
- */
-
-
-
 function aes_encrypt(data, iv, AESKey) {
     try {
-        let encrypt = forge.cipher.createCipher('AES-CBC', AESKey);
-        encrypt.start({ iv: iv });
+        // Use first 12 bytes for GCM IV
+        let gcmIv = iv;
+        if (iv.length > 12) {
+            gcmIv = iv.substring(0, 12);
+        }
+
+        let encrypt = forge.cipher.createCipher('AES-GCM', AESKey);
+        encrypt.start({
+            iv: gcmIv,
+            tagLength: 128 // 128 bits for authentication tag
+        });
         encrypt.update(forge.util.createBuffer(data, 'utf-8'));
         encrypt.finish();
-        
-        let encrypted = forge.util.encode64(encrypt.output.getBytes());
-        return encrypted;
+
+        // Combine encrypted data and tag
+        const encryptedData =  encrypt.mode.tag.getBytes() + encrypt.output.getBytes()
+        return forge.util.encode64(encryptedData);
     } catch (error) {
         console.error("Encryption error:", error);
         throw error;
@@ -158,23 +159,45 @@ function aes_encrypt(data, iv, AESKey) {
 }
 
 /**
- * Decrypts data using AES-CBC algorithm
- * 
- * @param {string} encryptedData - Base64-encoded encrypted data
+ * Decrypts data using AES-GCM algorithm
+ *
+ * @param {string} encryptedData - Base64-encoded encrypted data with authentication tag
  * @param {string} iv - The initialization vector
  * @param {string} AESKey - The AES decryption key
+ * @returns {string} The decrypted data as raw binary
+ * @throws {Error} If decryption fails or authentication fails
  */
-
-
 
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
-        let decrypt = forge.cipher.createDecipher('AES-CBC', AESKey);
-        decrypt.start({ iv: iv });
-        decrypt.update(forge.util.createBuffer(forge.util.decode64(encryptedData)));
-        decrypt.finish();
-        
-        // Return raw data instead of assuming UTF-8 encoding
+        // Use first 12 bytes for GCM IV
+        let gcmIv = iv;
+        if (iv.length > 12) {
+            gcmIv = iv.substring(0, 12);
+        }
+
+        // Decode the base64 data
+        const encryptedBytes = forge.util.decode64(encryptedData);
+
+        // Extract ciphertext and tag (first 16 bytes)
+        const tag = encryptedBytes.slice(0,16);
+        const bytes = encryptedBytes.slice(16, encryptedBytes.length);
+
+        // Create decipher
+        let decrypt = forge.cipher.createDecipher('AES-GCM', AESKey);
+        decrypt.start({
+            iv: gcmIv,
+            tag: forge.util.createBuffer(tag),
+            tagLength: 128
+        });
+        decrypt.update(forge.util.createBuffer(bytes));
+
+        // Finish and verify authentication
+        const pass = decrypt.finish();
+        if (!pass) {
+            throw new Error("Authentication failed");
+        }
+
         return decrypt.output.data;
     } catch (error) {
         console.error("Decryption error:", error);
