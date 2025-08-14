@@ -215,7 +215,6 @@ async function decryptSecuredKey(encryptedKey, deviceID, baseKey, fingerprint) {
     const key = forge.pkcs5.pbkdf2(hashedData, extractedSaltBytes, 100000, 32, forge.sha256.create());
     const keySliced = key.slice(0, 32);
     const decrypted = aes_decrypt(encrypted, extractedIvBytes, keySliced);
-    console.log('decrypted', decrypted);
     return decrypted;
 }
 
@@ -358,7 +357,7 @@ function aes_encrypt(data, iv, AESKey) {
         });
         encrypt.update(forge.util.createBuffer(data, 'utf-8'));
         encrypt.finish();
-        
+
         // Combine encrypted data and tag
         const encryptedData =  encrypt.mode.tag.getBytes() + encrypt.output.getBytes()
         return forge.util.encode64(encryptedData);
@@ -385,14 +384,14 @@ function aes_decrypt(encryptedData, iv, AESKey) {
         if (iv.length > 12) {
             gcmIv = iv.substring(0, 12);
         }
-        
+
         // Decode the base64 data
         const encryptedBytes = forge.util.decode64(encryptedData);
-        
+
         // Extract ciphertext and tag (first 16 bytes)
         const tag = encryptedBytes.slice(0,16);
         const bytes = encryptedBytes.slice(16, encryptedBytes.length);
-        
+
         // Create decipher
         let decrypt = forge.cipher.createDecipher('AES-GCM', AESKey);
         decrypt.start({
@@ -401,14 +400,14 @@ function aes_decrypt(encryptedData, iv, AESKey) {
             tagLength: 128
         });
         decrypt.update(forge.util.createBuffer(bytes));
-        
+
         // Finish and verify authentication
         const pass = decrypt.finish();
         if (!pass) {
             resetKey();
             throw new Error("Authentication key is corrupted. Key has been removed! You must add it again");
         }
-        
+
         return decrypt.output.data;
     } catch (error) {
         console.error("Decryption error:", error);
@@ -582,7 +581,7 @@ async function login() {
             'path': '/'
         });
 
-        window.location.href = "https://glueeed.dev:6969/";
+        window.location.href = `http://localhost:3000/`;
     } catch (error) {
         console.error("Login failed:", error);
         alert("Login failed: " + error.message);

@@ -85,10 +85,10 @@ async function getFingerprint() {
 
 /**
  * Secures a private key using a combination of device fingerprint, device ID, and server-provided base key
- * 
+ *
  * This function implements a multi-factor encryption approach where the key can only be
  * decrypted when all three components (fingerprint, deviceID, baseKey) are present.
- * 
+ *
  * @param {string} fingerprint - The browser fingerprint
  * @param {string} privateKey - The private key to secure
  * @param {string} deviceID - The unique device identifier
@@ -113,7 +113,7 @@ function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
 
 /**
  * Resets the registration state in localStorage
- * 
+ *
  * This ensures users can restart the registration process if needed
  */
 
@@ -207,18 +207,18 @@ function aes_decrypt(encryptedData, iv, AESKey) {
 
 /**
  * Generates cryptographic key pairs for user authentication
- * 
+ *
  * Creates a BIP-39 mnemonic phrase, derives a seed, and generates both
  * a private key and corresponding public key for elliptic curve cryptography.
  * The mnemonic phrase is displayed to the user as a recovery mechanism.
- * 
+ *
  * @param {boolean} userRegistered - Flag indicating if user is already registered
  */
 
 
 
 function generateAuthKeys(userRegistered) {
-    const bipkey = document.getElementById('bipkey');
+    const bipkey = document.getElementById( 'bipkey');
     if (localStorage.getItem('is_Registered') !== null){
         throw new Error('User already registered')
     }
@@ -226,13 +226,13 @@ function generateAuthKeys(userRegistered) {
     const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(24));
     const mnemonicFormatted = mnemonic.phrase.split(' ').join('-');
     bipkey.textContent = mnemonicFormatted;
+    generateQRCode(mnemonicFormatted);
 
     const mnemonicObj = ethers.Mnemonic.fromPhrase(mnemonic.phrase);
     const seed = mnemonicObj.computeSeed();
 
     const hdNode = ethers.HDNodeWallet.fromSeed(seed);
     const privateKey = hdNode.privateKey;
-    console.log('privateKey', privateKey);
 
     const ec = new elliptic.ec('p256');
     const keyPair = ec.keyFromPrivate(privateKey.slice(2));
@@ -243,7 +243,7 @@ function generateAuthKeys(userRegistered) {
 
 /**
  * Stores an encrypted private key in IndexedDB
- * 
+ *
  * @param {string} key - The encrypted key
  * @param {string} iv - The initialization vector used for encryption
  * @param {string} salt - The salt used for key derivation
@@ -270,14 +270,14 @@ async function insertKey(key, iv, salt) {
 
 /**
  * Main registration function implementing secure key generation and storage
- * 
+ *
  * This function performs a secure registration process with the following steps:
  * 1. Validates user input
  * 2. Generates authentication keys (public/private key pair)
  * 3. Performs key exchange with the server to establish a secure channel
  * 4. Secures the private key using three-factor authentication
  * 5. Encrypts and sends registration data to the server
- * 
+ *
  * The security model ensures the private key is protected by:
  * - Device ID (something you have)
  * - Browser fingerprint (something you are)
@@ -294,7 +294,7 @@ async function register(){
         if (!login || login.trim() === "") {
             throw new Error("User ID cannot be empty");
         }
-        
+
         // Get device identification factors
         const clientPairKeys = ec.genKeyPair();
         const clientPublicKey = clientPairKeys.getPublic('hex');
@@ -343,11 +343,9 @@ async function register(){
         const ivHex = forge.util.bytesToHex(iv);
         const encrypted_login = aes_encrypt(login, ivHex, AESKey);
         const encrypted_publicKey = aes_encrypt(keys.publicKey, ivHex, AESKey);
-        
+
         // Secure and store the private key
         const secure = secureSessionKey(fingerprint, keys.privateKey, DeviceID, baseKey);
-        console.log(secure.encryptedKey);
-        console.log(secure.iv);
         await insertKey(secure.encryptedKey, secure.iv, secure.salt);
 
         // Verify all data was encrypted properly

@@ -30,8 +30,8 @@ import {colors} from "./utils/chalk";
 
 //Uncomment when httpsMode is enabled
 // import {options} from "./config/ssl";
-// import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings"; //Uncomment when helmet is enabled
-import {corsEnabled, httpsMode, PORT, domain, helmetEnabled} from "./config/settings"; //Comment when helmet is enabled
+import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings"; //Uncomment when helmet is enabled
+// import {corsEnabled, httpsMode, PORT, domain, helmetEnabled} from "./config/settings"; //Comment when helmet is enabled
 
 // Import Routes
 import keyEnchange from "./routes/keyEnchange";
@@ -61,9 +61,9 @@ if (corsEnabled === true) {
     app.use(cors());
 }
 
-// if (helmetEnabled === true) {
-//     // app.use(helmet(helmetConfig)); //Uncomment when helmet is enabled
-// }
+if (helmetEnabled === true) {
+    app.use(helmet(helmetConfig)); //Comment when helmet is disabled
+}
 
 
 // Frontend handling

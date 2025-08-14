@@ -8,20 +8,19 @@
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <link href="../css/core.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
     <link crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
           integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
           referrerpolicy="no-referrer" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
-    <script crossorigin="anonymous"
-            integrity="sha512-5+LP8fuqYUy3NGotnIScQtePIiDUvMdIgT+QdlCEW0ULh9ZtO0AXO0/9lqqSjS8rtL5RGrIviZU8+/urz07iSg=="
-            referrerpolicy="no-referrer" src="https://cdnjs.cloudflare.com/ajax/libs/validator/13.12.0/validator.js"></script>
-    <script src="../libraries/particlejs/particles.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/node-forge@1.0.0/dist/forge.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.7/elliptic.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js" integrity="sha512-UXYETj+vXKSURF1UlgVRLzWRS9ZiQTv3lcL4rbeLyqTXCPNZC6PTLF/Ik3uxm2Zo+E109cUpJPZfLxJsCgKSng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/idb@8.0.0/build/umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@thumbmarkjs/thumbmarkjs@1.1.1/dist/thumbmark.umd.min.js"></script>
+    <script src="../lib/particlejs/particles.js"></script>
+    <script src="../lib/node-forge/forge-min.js"></script>
+    <script src="../lib/elliptic/elliptic.min.js"></script>
+    <script src="../lib/ethers/ethers.umd.min.js"></script>
+    <script src="../lib/idb/idb-umd-min.js"></script>
+    <script src="../lib/thumbmark/thumbamark.umd.min.js"></script>
+    <script src="../lib/qr/qrcode.js"></script>
+    <script src="../lib/qr/jquery.min.js"></script>
 
 
 
@@ -66,32 +65,49 @@
 
         <div class=" font-['Segoe UI', Tahoma, Geneva, Verdana, sans-serif'] font-medium flex mt-80 flex-col justify-center items-center transition-all duration-400 ease-in-out    ">
 
+
             <div class=" relative w-full max-w-md mx-auto box shadow-xl z-100  rounded-xl items-center p-6">
 
                 <h2 class="ml-8 mr-8 text-3xl mt-10 font-bold text-[#5849bb]  font-[Josefin Sans] Sans text-center ">
                     Register</h2>
-                <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Welcome! </br> register to use the
+                <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Welcome! <br> register to use the
                     services.</p>
 
                 <div class="flex flex-col items-center">
                     <div class="relative w-full mt-5 p-3">
-                        <input  id="login" class="   borders colors valid  w-full  border-[2px]  focus:outline-none focus:ring-2 rounded-lg text-sm h-10 p-3 pl-12"
-                                placeholder="User ID" required type="email">
+                        <input class="   borders colors valid  w-full  border-[2px]  focus:outline-none focus:ring-2 rounded-lg text-sm h-10 p-3 pl-12"
+                               id="login"
+                               placeholder="User ID" required type="email">
                         <i class="fa-solid fa-user input-icon absolute pl-6 pb-2  mt-1 top-1/2  -translate-y-1/2 text-gray-400"></i>
                     </div>
-                    <p class="ml-8 mt-3 mr-8 text-xs text-center font-color opacity-70">NOTE: The User ID should not contain personal information and preferably be random</p>
+                    <p class="ml-8 mt-3 mr-8 text-xs text-center font-color opacity-70">NOTE: For security, your User ID
+                        should be random and not contain any personal information</p>
 
                 </div>
                 <div id="registered" hidden>
                     <h2 class="ml-8 mr-8 text-xl mt-10 font-bold text-[#5849bb]  font-[Josefin Sans] Sans text-center ">
                         Successful registered!</h2>
-                    <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Your login key has been saved! </br> In case of changing the device, you need to provide the key generated below.</p>
+                    <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Your login key has been
+                        saved! <br> In case of changing the device, you need to provide the key generated below.</p>
+                    <div class=" w-full max-w-md mx-auto box shadow-2xl shadow-gray-400 z-102  rounded-xl  p-6"
+                         id="qrmodal" hidden>
+                        <div class="relative w-full  flex justify-end">
+                            <button class="text-white hover:bg-[#423691] mt-1 ml-3  bg-[#5849bb]  focus:ring-4 focus:outline-none font-medium rounded-full text-sm p-2.5 text-center inline-flex items-center me-2 " id="close"
+                                    onclick="closeModal()">
+                                <i class="fa-solid fa-xmark" style="color: #ffffff;"></i></button>
+                        </div>
+                        <h2 class="ml-8 mr-8 text-xl mt-10 font-bold text-[#5849bb]  font-[Josefin Sans] Sans text-center ">
+                            Generated AUTH QR CODE!</h2>
+                        <div class=" mt-10 flex justify-center items-center" id="qrcode"></div>
+                        <div class="flex flex-col items-end">
+                            <button onclick="downloadQRCode()"><i class="fa-solid fa-download" style="color: #5849bb;"></i></button>
+                        </div>
+                    </div>
                     <div class="flex flex-row justify-between  ml-[5%] mr-[5%] ">
-                        <p  class="ml-8 mt-8 mr-8 text-md text-center font-color opacity-80"> <code id="bipkey">Boat-Car-Honest-Honey-Stone-Water-Speed-Grass-Dog-Cat-Algorithm-Gold</code></p>
+                        <p class="ml-8 mt-8 mr-8 text-md text-center font-color opacity-80"><code id="bipkey">Boat-Car-Honest-Honey-Stone-Water-Speed-Grass-Dog-Cat-Algorithm-Gold</code></p>
                         <button onclick="copyTextToClipboard('encryptedText', 'copyNotification')"><i class=" fa-solid fa-copy text-violet-500   hover:text-xl transition-all"></i></button>
                     </div>
-
-
+                    <p class="ml-8 mt-8 mr-8 text-sm text-center font-color opacity-70"> Click here to generate <a onclick="manageQrcodeModal(false)" class="font-bold text-[#5829bb] hover:text-violet-950">AUTH QR CODE</a></p>
                 </div>
                 <div>
                     <p class="text-center mt-8 font-color opacity-70 text-sm">Are you already a member? <a
@@ -129,7 +145,7 @@
                 <div>
                     <h3 class="font-semibold mb-3">Links</h3>
                     <ul class="space-y-2 opacity-80">
-                        <li><a class="hover:text-primary transition-colors" href="https://glueeeed.pl">Main</a>
+                        <li><a class="hover:text-primary transition-colors" href="https://glueeed.dev:6969/">Main</a>
                         </li>
                         <li><a class="hover:text-primary transition-colors" href="#">About Project</a></li>
                         <li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>
@@ -138,8 +154,8 @@
             </div>
         </div>
         <div class="border-t border-white/20 mt-6 p-6 text-center">
-            <p class="opacity-80">© 2025 Glueeed. All rights reserved 💜</p>
-            <p class="text-sm opacity-60">Version 1.0.0 | Last updated: 19.07.2025</p>
+            <p class="opacity-80">© 2025 Glueeed. All rights reserved.</p>
+            <p class="text-sm opacity-60">Version 1.0.0 | Last updated: 14.08.2025</p>
         </div>
     </div>
 
@@ -147,12 +163,13 @@
 <!--    </div>-->
 
 <script type="text/javascript">
-    particlesJS.load('particles-js', '../libraries/particlejs/assets/particles.json', function () {
+    particlesJS.load('particles-js', '../lib/particlejs/assets/particles.json', function () {
     });
 </script>
 
 
 <script src="../js/registerZKP.js"></script>
+<script src="../js/qrcodeSystem.js"></script>
 
 
 </body>
