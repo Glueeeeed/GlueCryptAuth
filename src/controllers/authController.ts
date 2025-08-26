@@ -22,6 +22,7 @@ import {jwtWrapper} from "../utils/jwtWrapper";
 import {challengeSecretJwt, sessionSecretJwt, appBaseKeySecret} from "../config/secrets"
 import KeyPair = EC.KeyPair;
 import {colors} from "../utils/chalk";
+import {disabled, onlyAdmin} from "../config/settings";
 
 
 interface registerRequest {
@@ -125,6 +126,13 @@ export const register = (req: Request<{}, {}, registerRequest>, res: Response<re
      */
 
     async function registerUSER() : Promise<any> {
+        if (disabled) {
+            console.group(colors.category('AuthController'));
+            console.log(colors.warning('Registration disabled. Refused request'));
+            console.groupEnd()
+            deleteSecret(sessionID);
+            return res.status(400).json({error: 'Registration is currently disabled'});
+        }
         const uuid: string = crypto.randomUUID();
         let isValid : string = ValidateZKP(login);
         switch (isValid) {
@@ -266,11 +274,48 @@ export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginRes
      * 
      * @returns {Promise<any>} Promise that resolves when authentication is complete
      */
-
+    async function checkOnlyAdmin(login: string) : Promise<any> {
+        if (onlyAdmin) {
+            const [users] = await db.execute('SELECT admin FROM usersZKP WHERE login = ?', [login]);
+            const data : any = (users as any[])[0];
+            const isAdmin: any = data.admin;
+            if (isAdmin === 0) {
+                return "notAdmin";
+            } else {
+                return "ok";
+            }
+        } else {
+            return "functionDisabled";
+        }
+    }
 
 
     async function auth() : Promise<any> {
         try {
+
+            let status : any = await checkOnlyAdmin(login);
+            switch (status) {
+                case "notAdmin":
+                    deleteSecret(sessionID);
+                    return res.status(400).json({error: "Access Denied. Log in is currently disabled."});
+                case "ok":
+                    console.group(colors.category('AuthController'));
+                    console.error(colors.success('Admin validation passed'));
+                    console.groupEnd()
+                    break;
+                case "functionDisabled":
+                    console.group(colors.category('AuthController'));
+                    console.error(colors.warning('checkAdmin disabled skipping'));
+                    console.groupEnd()
+                    break;
+                default:
+                    status = false;
+                    break;
+            }
+
+            if (status === false) {
+                throw new Error('Unauthorized');
+            }
 
             const [users] = await db.execute('SELECT * FROM usersZKP WHERE login = ?', [login]);
             const data : any = (users as any[])[0];
@@ -354,6 +399,9 @@ export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: R
     
     // Return the challenge JWT to the client
     return res.json({challenge: challengeJWT})
+
 }
+
+
 
 
