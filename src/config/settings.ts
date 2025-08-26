@@ -5,7 +5,7 @@ import { HelmetOptions } from 'helmet';
 // If is true, connection using https. Check ssl.ts to fill ssl certificate.
 export const httpsMode : boolean = false;
 //Allow to log in only Admins
-export const onlyAdmin : boolean = true;
+export const onlyAdmin : boolean = false;
 // Block register new accounts
 export const disabled : boolean = false;
 // Enter your domain (If locally type http://localhost)
