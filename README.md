@@ -37,10 +37,10 @@ https://glueeed.dev:6969/
     
       CREATE TABLE usersZKP (
        usersID INT AUTO_INCREMENT PRIMARY KEY,
-       login TEXT NOT NULL,
+       login VARCHAR(20) NOT NULL,
        publickey TEXT NOT NULL,
        admin BOOLEAN,
-       uuid TEXT NOT NULL 
+       uuid varchar(36) NOT NULL 
    );
 
 5. Create `secrets.ts` (Check `example.secrets.ts`)
