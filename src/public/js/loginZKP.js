@@ -8,12 +8,11 @@
 
 
 
-// Initialize elliptic curve with P-256 standard
 let ec = new elliptic.ec('p256');
-// Flag to track if a new key is being generated during the session
+
 let isGeneratedKey = false;
 
-// Setup initial state when DOM is fully loaded
+
 document.addEventListener("DOMContentLoaded", (event) => {
     verifyDeviceID()
     const savedDarkMode = localStorage.getItem('theme') === 'dark';
@@ -34,11 +33,6 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
 });
 
-/**
- * Resets the user's authentication key from IndexedDB storage
- *
- * @returns {Promise<null>} Returns null on error
- */
 
 
 
@@ -59,13 +53,6 @@ async function resetKey() {
     }
 }
 
-/**
- * Decodes a base64url encoded string to UTF-8
- *
- * @param {string} str - The base64url encoded string
- * @returns {string} The decoded string
- */
-
 
 
 function base64UrlDecode(str) {
@@ -77,14 +64,6 @@ function base64UrlDecode(str) {
         return decoded;
     }
 }
-
-/**
- * Validates the format of a mnemonic phrase
- *
- * @param {string} mnemonic - The mnemonic phrase to validate
- * @returns {boolean} True if the mnemonic is valid, false otherwise
- */
-
 
 
 function validateMnemonic(mnemonic) {
@@ -129,12 +108,6 @@ function themeChange() {
         }
     }
 }
-
-/**
- * Retrieves the browser fingerprint using ThumbmarkJS
- *
- * @returns {Promise<Object>} The fingerprint object
- */
 
 
 
@@ -238,14 +211,6 @@ function setCookie(name, value, options = {}) {
     document.cookie = cookieString;
 }
 
-/**
- * Stores an encrypted private key in IndexedDB
- *
- * @param {string} key - The encrypted key
- * @param {string} iv - The initialization vector used for encryption
- * @param {string} salt - The salt used for key derivation
- * @returns {Promise<null>} Returns null on error
- */
 
 
 
@@ -265,13 +230,6 @@ async function insertKey(key, iv, salt) {
         return null;
     }
 }
-
-/**
- * Retrieves the encrypted private key from IndexedDB
- *
- * @returns {Promise<string>} The encrypted key in format "encrypted|iv:salt"
- * @throws {Error} If the key is not found or another error occurs
- */
 
 
 
@@ -332,19 +290,10 @@ function generateAuthKey() {
     }
 }
 
-/**
- * Encrypts data using AES-GCM algorithm
- *
- * @param {string} data - The data to encrypt
- * @param {string} iv - The initialization vector
- * @param {string} AESKey - The AES encryption key
- * @returns {string} Base64-encoded encrypted data with authentication tag
- * @throws {Error} If encryption fails
- */
+
 
 function aes_encrypt(data, iv, AESKey) {
     try {
-        // Use first 12 bytes for GCM IV
         let gcmIv = iv;
         if (iv.length > 12) {
             gcmIv = iv.substring(0, 12);
@@ -353,12 +302,11 @@ function aes_encrypt(data, iv, AESKey) {
         let encrypt = forge.cipher.createCipher('AES-GCM', AESKey);
         encrypt.start({
             iv: gcmIv,
-            tagLength: 128 // 128 bits for authentication tag
+            tagLength: 128
         });
         encrypt.update(forge.util.createBuffer(data, 'utf-8'));
         encrypt.finish();
 
-        // Combine encrypted data and tag
         const encryptedData =  encrypt.mode.tag.getBytes() + encrypt.output.getBytes()
         return forge.util.encode64(encryptedData);
     } catch (error) {
@@ -367,32 +315,20 @@ function aes_encrypt(data, iv, AESKey) {
     }
 }
 
-/**
- * Decrypts data using AES-GCM algorithm
- *
- * @param {string} encryptedData - Base64-encoded encrypted data with authentication tag
- * @param {string} iv - The initialization vector
- * @param {string} AESKey - The AES decryption key
- * @returns {string} The decrypted data as raw binary
- * @throws {Error} If decryption fails or authentication fails
- */
+
 
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
-        // Use first 12 bytes for GCM IV
         let gcmIv = iv;
         if (iv.length > 12) {
             gcmIv = iv.substring(0, 12);
         }
 
-        // Decode the base64 data
         const encryptedBytes = forge.util.decode64(encryptedData);
 
-        // Extract ciphertext and tag (first 16 bytes)
         const tag = encryptedBytes.slice(0,16);
         const bytes = encryptedBytes.slice(16, encryptedBytes.length);
 
-        // Create decipher
         let decrypt = forge.cipher.createDecipher('AES-GCM', AESKey);
         decrypt.start({
             iv: gcmIv,
@@ -401,7 +337,6 @@ function aes_decrypt(encryptedData, iv, AESKey) {
         });
         decrypt.update(forge.util.createBuffer(bytes));
 
-        // Finish and verify authentication
         const pass = decrypt.finish();
         if (!pass) {
             resetKey();
@@ -450,7 +385,6 @@ async function login() {
         const fingerprintObj = await getFingerprint();
         const fingerprint = fingerprintObj.thumbmark;
 
-        // 1. First perform key exchange to get the baseKey
         console.log('Performing key exchange...');
         let clientPairKeys = ec.genKeyPair();
         let clientPublicKey = clientPairKeys.getPublic('hex');
@@ -479,15 +413,14 @@ async function login() {
             throw new Error('Public key not received');
         }
 
-        // Derive shared secret and create AES key
+
         const serverPublicKeyObj = ec.keyFromPublic(serverPublicKey, 'hex');
         const secret = clientPairKeys.derive(serverPublicKeyObj.getPublic());
         const AESKey = secret.toString('hex').slice(0, 32);
 
-        // Decrypt the baseKey
+
         const baseKey = aes_decrypt(encrypted_baseKey, appBaseIV, AESKey);
 
-        // 2. Now prepare the private key (decrypt existing or generate new)
         let authKey;
         if (notfound === true) {
             console.log('Decrypting existing key...');
@@ -498,12 +431,11 @@ async function login() {
             authKey = generateAuthKey();
             isGeneratedKey = true;
 
-            // Save the new key immediately
             const encrypted_privateKey = secureSessionKey(fingerprint, authKey, DeviceID, baseKey);
             await insertKey(encrypted_privateKey.encryptedKey, encrypted_privateKey.iv, encrypted_privateKey.salt);
         }
 
-        // 3. Now get the challenge
+
         console.log('Getting challenge...');
         const challengeResponse = await fetch("http://localhost:3000/api/auth/getZKPChallenge", {
             method: "POST",
@@ -525,13 +457,11 @@ async function login() {
         const payload = decodeJwtPayload(challenge);
         const challengeJWT = payload.challenge;
 
-        // 4. Sign the challenge with the properly decrypted key
         console.log('Signing challenge...');
         const keyPair = ec.keyFromPrivate(authKey.slice(2));
         const signature = keyPair.sign(challengeJWT);
         const derSignatureHex = signature.toDER('hex');
 
-        // 5. Send authentication data
         console.log('Encrypting data...');
         let iv = forge.random.getBytesSync(16);
         let ivHex = forge.util.bytesToHex(iv);
@@ -540,7 +470,6 @@ async function login() {
         let encrypted_deviceID = aes_encrypt(DeviceID, ivHex, AESKey);
         let encrypted_jwt = aes_encrypt(challenge, ivHex, AESKey);
 
-        // Verify all data was encrypted properly
         if (encrypted_challenge && encrypted_login && encrypted_deviceID && encrypted_jwt) {
             console.log('Successfully encrypted data');
             console.log('Sending data to server...');
@@ -548,7 +477,6 @@ async function login() {
             throw new Error('Failed to encrypt data..');
         }
 
-        // Send authentication request
         const authResponse = await fetch('http://localhost:3000/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -569,7 +497,6 @@ async function login() {
             throw new Error(errorData.error);
         }
 
-        // Process successful authentication
         const authData = await authResponse.json();
         console.log('Data received from server...');
         console.log('Operation successful');

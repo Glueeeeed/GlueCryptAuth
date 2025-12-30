@@ -29,11 +29,9 @@ function closeModal() {
 
 function generateQRCode(data) {
 
-    // Clear previous QR code if exists
     const qrcodeElement = document.getElementById('qrcode');
     qrcodeElement.innerHTML = '';
 
-    // Generate new QR code
     const qrCode = new QRCode(qrcodeElement, {
         text: data,
         width: 256,
@@ -44,15 +42,10 @@ function generateQRCode(data) {
     });
 }
 
-/**
- * Downloads the generated QR code as a PNG image
- * @param {string} filename - The name of the downloaded file (without extension)
- */
 
 function downloadQRCode(filename = 'AuthQRCode') {
     const login = document.getElementById('login').value;
 
-    // Get the canvas element from the QR code container
     const canvas = document.querySelector('#qrcode canvas');
 
     if (!canvas) {
@@ -60,15 +53,13 @@ function downloadQRCode(filename = 'AuthQRCode') {
         return;
     }
 
-    // Convert canvas to data URL
     const dataURL = canvas.toDataURL('image/png');
 
-    // Create a temporary link element
+
     const downloadLink = document.createElement('a');
     downloadLink.href = dataURL;
     downloadLink.download = `${filename + '_' + login}.png`;
 
-    // Append to the document, click it to trigger download, then remove it
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);

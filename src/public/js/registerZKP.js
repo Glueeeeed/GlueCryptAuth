@@ -52,11 +52,6 @@ function themeChange() {
     }
 }
 
-/**
- * Copies the generated mnemonic phrase to the clipboard
- * This allows users to save their recovery phrase
- */
-
 
 
 function copyTextToClipboard() {
@@ -69,11 +64,7 @@ function copyTextToClipboard() {
     alert('copied');
 }
 
-/**
- * Retrieves the browser fingerprint using ThumbmarkJS
- *
- * @returns {Promise<Object>} The fingerprint object
- */
+
 
 
 
@@ -111,11 +102,6 @@ function secureSessionKey(fingerprint, privateKey, deviceID, baseKey) {
     return { encryptedKey: encryptedPrivatekey, iv: ivHex, salt: saltHex } ;
 }
 
-/**
- * Resets the registration state in localStorage
- *
- * This ensures users can restart the registration process if needed
- */
 
 
 
@@ -144,12 +130,11 @@ function aes_encrypt(data, iv, AESKey) {
         let encrypt = forge.cipher.createCipher('AES-GCM', AESKey);
         encrypt.start({
             iv: gcmIv,
-            tagLength: 128 // 128 bits for authentication tag
+            tagLength: 128
         });
         encrypt.update(forge.util.createBuffer(data, 'utf-8'));
         encrypt.finish();
 
-        // Combine encrypted data and tag
         const encryptedData =  encrypt.mode.tag.getBytes() + encrypt.output.getBytes()
         return forge.util.encode64(encryptedData);
     } catch (error) {
@@ -170,20 +155,17 @@ function aes_encrypt(data, iv, AESKey) {
 
 function aes_decrypt(encryptedData, iv, AESKey) {
     try {
-        // Use first 12 bytes for GCM IV
         let gcmIv = iv;
         if (iv.length > 12) {
             gcmIv = iv.substring(0, 12);
         }
 
-        // Decode the base64 data
+
         const encryptedBytes = forge.util.decode64(encryptedData);
 
-        // Extract ciphertext and tag (first 16 bytes)
         const tag = encryptedBytes.slice(0,16);
         const bytes = encryptedBytes.slice(16, encryptedBytes.length);
 
-        // Create decipher
         let decrypt = forge.cipher.createDecipher('AES-GCM', AESKey);
         decrypt.start({
             iv: gcmIv,
@@ -192,7 +174,6 @@ function aes_decrypt(encryptedData, iv, AESKey) {
         });
         decrypt.update(forge.util.createBuffer(bytes));
 
-        // Finish and verify authentication
         const pass = decrypt.finish();
         if (!pass) {
             throw new Error("Authentication failed");
@@ -241,14 +222,6 @@ function generateAuthKeys(userRegistered) {
     return { publicKey: publicKey, privateKey: privateKey };
 }
 
-/**
- * Stores an encrypted private key in IndexedDB
- *
- * @param {string} key - The encrypted key
- * @param {string} iv - The initialization vector used for encryption
- * @param {string} salt - The salt used for key derivation
- */
-
 
 
 async function insertKey(key, iv, salt) {
@@ -289,23 +262,19 @@ async function insertKey(key, iv, salt) {
 
 async function register(){
     try {
-        // Validate user input
         const login = document.getElementById('login').value;
         if (!login || login.trim() === "") {
             throw new Error("User ID cannot be empty");
         }
 
-        // Get device identification factors
         const clientPairKeys = ec.genKeyPair();
         const clientPublicKey = clientPairKeys.getPublic('hex');
         const DeviceID = localStorage.getItem('DeviceID');
         const fingerprintObj = await getFingerprint();
         const fingerprint = fingerprintObj.thumbmark;
 
-        // Generate authentication keys
         const keys = generateAuthKeys();
 
-        // Perform key exchange with server
         const keyExchangeResponse = await fetch('http://localhost:3000/api/keyexchange', {
             method: 'POST',
             headers: {
@@ -330,7 +299,6 @@ async function register(){
             throw new Error('Public key not received');
         }
 
-        // Derive shared secret and create AES key
         const serverPublicKeyObj = ec.keyFromPublic(serverPublicKey, 'hex');
         const secret = clientPairKeys.derive(serverPublicKeyObj.getPublic());
         const AESKey = secret.toString('hex').slice(0, 32);
@@ -338,17 +306,17 @@ async function register(){
 
         console.log('Encrypting data...');
 
-        // Encrypt registration data
+
         const iv = forge.random.getBytesSync(16);
         const ivHex = forge.util.bytesToHex(iv);
         const encrypted_login = aes_encrypt(login, ivHex, AESKey);
         const encrypted_publicKey = aes_encrypt(keys.publicKey, ivHex, AESKey);
 
-        // Secure and store the private key
+
         const secure = secureSessionKey(fingerprint, keys.privateKey, DeviceID, baseKey);
         await insertKey(secure.encryptedKey, secure.iv, secure.salt);
 
-        // Verify all data was encrypted properly
+
         if (encrypted_publicKey && encrypted_login && secure.encryptedKey && secure.iv && secure.salt) {
             console.log('Successfully encrypted data');
             console.log('Sending data to server...');
@@ -356,7 +324,6 @@ async function register(){
             throw new Error('Failed to encrypt data.');
         }
 
-        // Send registration request
         const registerResponse = await fetch('http://localhost:3000/api/auth/register', {
             method: 'POST',
             headers: {
@@ -375,7 +342,7 @@ async function register(){
             throw new Error(errorData.error);
         }
 
-        // Process successful registration
+
         const registerData = await registerResponse.json();
         console.log('Data received from server...');
         console.log('Operation successful');

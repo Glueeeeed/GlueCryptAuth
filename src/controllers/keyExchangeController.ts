@@ -15,27 +15,20 @@ import crypto from "crypto";
 import {appBaseKeySecret} from '../config/secrets'
 import {data_encrypt} from "../utils/cryptoService";
 
-// Initialize elliptic curve with P-256 standard
 const ec = new EC('p256');
 
-// In-memory storage for session secrets
 const Secrets = new Map<string, string>();
 
 
 interface KeyExchangeRequest {
-    /** The client's public key in hexadecimal format */
     clientPublicKey: string;
 }
 
 
 interface KeyExchangeResponse {
-    /** The server's public key in hexadecimal format */
     serverPublicKey: string;
-    /** Unique session identifier */
     sessionID: string;
-    /** Encrypted application base key */
     baseKey: string;
-    /** Initialization vector for base key encryption */
     appBaseIV: string;
 }
 
@@ -63,25 +56,20 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
     const { clientPublicKey } = req.body;
 
     try {
-        // Generate server key pair for this exchange
         const serverPairKeys : KeyPair = ec.genKeyPair();
         const serverPublicKey : string = serverPairKeys.getPublic('hex');
 
-        // Create key object from client's public key and derive shared secret
         const clientPublicKeyObj : KeyPair = ec.keyFromPublic(clientPublicKey, 'hex');
         const secret : string = serverPairKeys.derive(clientPublicKeyObj.getPublic()).toString('hex');
         const slicedSecret : string = secret.slice(0, 32); // Use first 32 bytes (256 bits) as AES key
 
-        // Generate a unique session ID and store the secret
         const sessionID : string = crypto.randomBytes(10).toString('base64');
         Secrets.set(sessionID, slicedSecret);
 
-        // Generate IV and encrypt the application base key
         const appBaseIV = crypto.randomBytes(16).toString('base64');
         const encrypted_appBaseKey = data_encrypt(appBaseKeySecret, appBaseIV, slicedSecret);
 
-        // Return the key exchange data to the client
-        res.json({ 
+        res.json({
             serverPublicKey: serverPublicKey, 
             sessionID: sessionID, 
             baseKey: encrypted_appBaseKey, 
@@ -95,18 +83,6 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
     console.groupEnd();
 };
 
-/**
- * Retrieves the shared secret for a given session
- * 
- * This function looks up the stored secret associated with a session ID.
- * It's used during the authentication process to access the previously
- * established shared secret for encryption/decryption operations.
- *
- * @param {string} sessionID - The session identifier
- * @returns {string} The shared secret key
- * @throws {Error} If the session ID is invalid or not found
- */
-
 
 
 export const getSlicedSecret = (sessionID: string): string => {
@@ -116,19 +92,6 @@ export const getSlicedSecret = (sessionID: string): string => {
     }
     return secret;
 };
-
-/**
- * Removes a session and its associated secret
- * 
- * This function deletes a session from the in-memory storage after
- * authentication is complete or when a session expires. It's an important
- * security measure to ensure that session secrets don't remain in memory
- * indefinitely.
- *
- * @param {string} sessionID - The session identifier to delete
- * @returns {void}
- * @throws {Error} If the session ID is invalid or not found
- */
 
 
 
