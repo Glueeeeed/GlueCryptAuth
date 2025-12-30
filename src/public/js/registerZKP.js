@@ -204,7 +204,7 @@ function generateAuthKeys(userRegistered) {
         throw new Error('User already registered')
     }
 
-    const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(24));
+    const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(32));
     const mnemonicFormatted = mnemonic.phrase.split(' ').join('-');
     bipkey.textContent = mnemonicFormatted;
     generateQRCode(mnemonicFormatted);

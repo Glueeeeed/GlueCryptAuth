@@ -73,7 +73,7 @@ function validateMnemonic(mnemonic) {
 
     const array = mnemonic.split('-');
 
-    if (array.length !== 18) {
+    if (array.length !== 24) {
         return false;
     }
 
