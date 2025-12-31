@@ -43,7 +43,7 @@ https://glueeed.dev:6969/
        uuid varchar(36) NOT NULL 
    );
 
-5. Create `secrets.ts` (Check `example.secrets.ts`)
+5. Create `secrets.env` (Check `example.env`)
 6. Start the application:
 
    ``` bash
@@ -73,3 +73,7 @@ This project is still in development and is not yet complete. It is **not suitab
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<p align="center">
+Made with ❤ by <a href="https://github.com/Glueeeeed">Glueeed</a>
+</p>
