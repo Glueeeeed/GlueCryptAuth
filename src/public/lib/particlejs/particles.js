@@ -882,7 +882,7 @@ Object.deepExtend = function(e, a) {
                 t && t()
               } else
                 console.log("Error pJS - XMLHttpRequest status: " + i.status),
-                    console.log("Error pJS - File config not found")
+                    console.log("Error pJS - File configs not found")
           }
           ,
           i.send()

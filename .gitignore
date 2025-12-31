@@ -1,3 +1,4 @@
-/src/config/secrets.ts
+/src/configs/secrets.ts
 /.idea/
 /node_modules/
+/src/configs/secrets.env

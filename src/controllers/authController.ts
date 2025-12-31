@@ -13,16 +13,17 @@ import * as jwtLib from 'jsonwebtoken';
 import crypto from 'crypto';
 import {ec as EC} from 'elliptic';
 const ec = new EC('p256');
-import db from "../config/database";
+import db from "../configs/database";
 import {Request, Response} from "express";
 import {deleteSecret, getSlicedSecret} from "./keyExchangeController";
 import {data_decrypt} from "../utils/cryptoService";
 import {ValidateZKP} from "../utils/validation";
 import {jwtWrapper} from "../utils/jwtWrapper";
-import {challengeSecretJwt, sessionSecretJwt, appBaseKeySecret} from "../config/secrets"
 import KeyPair = EC.KeyPair;
 import {colors} from "../utils/chalk";
-import {disabled, onlyAdmin} from "../config/settings";
+import {disabled, onlyAdmin} from "../configs/settings";
+import dotenv from 'dotenv';
+dotenv.config({ path: './src/configs/secrets.env' })
 
 
 interface registerRequest {
@@ -153,7 +154,7 @@ export const register = (req: Request<{}, {}, registerRequest>, res: Response<re
             }
 
             await db.execute('INSERT INTO usersZKP (login, publickey, admin, uuid) VALUES (?, ?, False, ?)', [login, publickey, uuid]);
-            res.json({response: "Successfully registered! Save your secret key, it will not be shown again!", basekey: appBaseKeySecret});
+            res.json({response: "Successfully registered! Save your secret key, it will not be shown again!", basekey: process.env.APP_BASE_KEY as string});
             console.group(colors.category('AuthController'));
             console.log(colors.success(`Successfully registered. User: ${uuid}`))
             deleteSecret(sessionID);
@@ -285,14 +286,13 @@ export const login = (req: Request<{}, {}, loginRequest>, res: Response<loginRes
 
 
             if (isValid === true) {
-
-                const token= jwtLib.sign(
-                    {uuid},
-                    sessionSecretJwt,
-                    {expiresIn: '15m'}
-                );
-                deleteSecret(sessionID);
-                return res.json({token: token, basekey: appBaseKeySecret})
+                    const token= jwtLib.sign(
+                        {uuid},
+                        process.env.SESSION_SECRET_JWT as string,
+                        {expiresIn: '15m'}
+                    );
+                    deleteSecret(sessionID);
+                    return res.json({token: token, basekey: process.env.APP_BASE_KEY as string});
             } else {
                 deleteSecret(sessionID);
                 return res.status(401).json({error: "Invalid Credentials"});
@@ -339,11 +339,11 @@ export const generateChallenge = (req: Request<{}, {}, ChallengeRequest>, res: R
     const deviceID : string = req.body.deviceID;
 
     const challenge : string = crypto.randomBytes(16).toString('hex');
-    
+
 
     const challengeJWT : string = jwtLib.sign(
         {challenge, deviceID},
-        challengeSecretJwt,
+        process.env.CHALLENGE_SECRET as string,
         {expiresIn: '30s'}
     );
 

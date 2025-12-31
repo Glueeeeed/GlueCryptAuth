@@ -12,8 +12,9 @@ import { ec as EC} from 'elliptic';
 import KeyPair = EC.KeyPair;
 import {colors} from "../utils/chalk";
 import crypto from "crypto";
-import {appBaseKeySecret} from '../config/secrets'
 import {data_encrypt} from "../utils/cryptoService";
+import dotenv from 'dotenv'
+dotenv.config({ path: './src/configs/secrets.env' })
 
 const ec = new EC('p256');
 
@@ -67,7 +68,7 @@ export const keyExchangeController = (req: Request<{}, {}, KeyExchangeRequest>, 
         Secrets.set(sessionID, slicedSecret);
 
         const appBaseIV = crypto.randomBytes(16).toString('base64');
-        const encrypted_appBaseKey = data_encrypt(appBaseKeySecret, appBaseIV, slicedSecret);
+        const encrypted_appBaseKey = data_encrypt(process.env.APP_BASE_KEY as string, appBaseIV, slicedSecret);
 
         res.json({
             serverPublicKey: serverPublicKey, 

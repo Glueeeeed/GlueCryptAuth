@@ -29,9 +29,9 @@ import helmet from 'helmet';
 import {colors} from "./utils/chalk";
 
 //Uncomment when httpsMode is enabled
-// import {options} from "./config/ssl";
-import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./config/settings"; //Uncomment when helmet is enabled
-// import {corsEnabled, httpsMode, PORT, domain, helmetEnabled} from "./config/settings"; //Comment when helmet is enabled
+// import {options} from "./configs/ssl";
+import {corsEnabled, httpsMode, PORT, domain, helmetEnabled, helmetConfig} from "./configs/settings"; //Uncomment when helmet is enabled
+// import {corsEnabled, httpsMode, PORT, domain, helmetEnabled} from "./configs/settings"; //Comment when helmet is enabled
 
 // Import Routes
 import keyEnchange from "./routes/keyEnchange";
